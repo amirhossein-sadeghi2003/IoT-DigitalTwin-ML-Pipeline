@@ -1,7 +1,10 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
 //replace your wifi ssid and password
-const char* ssid     = "your_ssid";
+const char* ssid     = "your-ssid";
 const char* password = "your_password";
 
 const char* mqttHost = "broker.hivemq.com";
@@ -12,13 +15,16 @@ const char* topicSub = "iot/cmd/arm";
 WiFiClient net;
 PubSubClient mqtt(net);
 
+Adafruit_BME280 bme;
+bool hasBme = false;
+
 unsigned long lastBeat = 0;
 const unsigned long beatInterval = 3000;
 
 void connectWifi() {
   if (WiFi.status() == WL_CONNECTED) return;
 
-  Serial.print("WiFi...");
+  Serial.print("wifi..");
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
@@ -31,15 +37,15 @@ void connectWifi() {
   Serial.println();
 
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.print("IP: ");
+    Serial.print("ip: ");
     Serial.println(WiFi.localIP());
   } else {
-    Serial.println("WiFi failed");
+    Serial.println("wifi failed");
   }
 }
 
 void mqttCallback(char* topic, byte* payload, unsigned int len) {
-  Serial.print("[MQTT] ");
+  Serial.print("[mqtt] ");
   Serial.print(topic);
   Serial.print(" => ");
   for (unsigned int i = 0; i < len; i++) {
@@ -54,8 +60,7 @@ void connectMqtt() {
 
   while (!mqtt.connected()) {
     String cid = "esp32-" + String((uint32_t)ESP.getEfuseMac(), HEX);
-
-    Serial.print("MQTT...");
+    Serial.print("mqtt..");
     if (mqtt.connect(cid.c_str())) {
       Serial.println("ok");
       mqtt.subscribe(topicSub);
@@ -68,11 +73,22 @@ void connectMqtt() {
   }
 }
 
+void initBme() {
+  if (bme.begin(0x76) || bme.begin(0x77)) {
+    hasBme = true;
+  } else {
+    Serial.println("no bme280 found");
+    hasBme = false;
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   delay(200);
+  Wire.begin();
   connectWifi();
   connectMqtt();
+  initBme();
 }
 
 void loop() {
@@ -83,15 +99,27 @@ void loop() {
   unsigned long now = millis();
   if (now - lastBeat >= beatInterval) {
     lastBeat = now;
+
     long rssi = (WiFi.status() == WL_CONNECTED) ? WiFi.RSSI() : 0;
 
-    String payload = String("{\"ms\":") + now + ",\"rssi\":" + rssi + "}";
-    bool ok = mqtt.publish(topicPub, payload.c_str());
+    float t = NAN, h = NAN, p = NAN;
+    if (hasBme) {
+      t = bme.readTemperature();
+      h = bme.readHumidity();
+      p = bme.readPressure() / 100.0f;
+    }
 
-    Serial.print("publish ");
+    String payload = String("{\"ms\":") + now +
+                     ",\"rssi\":" + rssi +
+                     ",\"t\":" + (isnan(t) ? String("null") : String(t,1)) +
+                     ",\"h\":" + (isnan(h) ? String("null") : String(h,1)) +
+                     ",\"p\":" + (isnan(p) ? String("null") : String(p,1)) +
+                     "}";
+
+    bool ok = mqtt.publish(topicPub, payload.c_str());
+    Serial.print("pub ");
     Serial.print(ok ? "ok: " : "fail: ");
     Serial.println(payload);
   }
 }
-
 
