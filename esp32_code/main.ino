@@ -4,108 +4,132 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 #include <BH1750.h>
-
-const char* ssid = "YOUR_SSID";
-const char* pass = "YOUR_PASS";
+#include <Adafruit_VL53L0X.h>
+// replace your ssid and pass word
+const char* ssid = "your_ssid";
+const char* pass = "your_password";
 
 const char* mqttHost = "broker.hivemq.com";
 const uint16_t mqttPort = 1883;
 const char* topicPub = "iot/test/sensors";
 const char* topicSub = "iot/cmd/arm";
 
-WiFiClient net;
-PubSubClient mqtt(net);
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 Adafruit_BME280 bme;
-BH1750 luxm;
+BH1750 bh;
+Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
-bool hasBme = false;
-bool hasLux = false;
+bool ok_bme = false;
+bool ok_bh = false;
+bool ok_lox = false;
 
-const int MAG_PIN = 18;
-unsigned long lastTick = 0;
-const unsigned long period = 3000;
+const int PIN_MAG = 18;
+unsigned long lastSend = 0;
+const unsigned long sendPeriod = 3000;
 
-static void wifiUp() {
+void wifiConnect() {
   if (WiFi.status() == WL_CONNECTED) return;
   Serial.print("wifi..");
-  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, pass);
-  int k = 0;
-  while (WiFi.status() != WL_CONNECTED && k++ < 40) {
-    delay(500); Serial.print(".");
+  int c = 0;
+  while (WiFi.status() != WL_CONNECTED && c < 40) {
+    delay(500);
+    Serial.print(".");
+    c++;
   }
   Serial.println(WiFi.status() == WL_CONNECTED ? "ok" : "fail");
 }
 
-static void onMqtt(char* topic, byte* payload, unsigned int n) {
-  Serial.print("[cmd] "); Serial.print(topic); Serial.print(" => ");
-  for (unsigned int i = 0; i < n; ++i) Serial.print((char)payload[i]);
+void mqttCallback(char* topic, byte* msg, unsigned int len) {
+  Serial.print("[msg] ");
+  Serial.print(topic);
+  Serial.print(" => ");
+  for (unsigned int i = 0; i < len; i++) {
+    Serial.print((char)msg[i]);
+  }
   Serial.println();
 }
 
-static void mqttUp() {
-  mqtt.setServer(mqttHost, mqttPort);
-  mqtt.setCallback(onMqtt);
-  while (!mqtt.connected()) {
+void mqttConnect() {
+  client.setServer(mqttHost, mqttPort);
+  client.setCallback(mqttCallback);
+  while (!client.connected()) {
     String cid = "esp32-" + String((uint32_t)ESP.getEfuseMac(), HEX);
     Serial.print("mqtt..");
-    if (mqtt.connect(cid.c_str())) {
+    if (client.connect(cid.c_str())) {
       Serial.println("ok");
-      mqtt.subscribe(topicSub);
-      mqtt.publish(topicPub, "{\"status\":\"online\"}");
+      client.subscribe(topicSub);
+      client.publish(topicPub, "{\"status\":\"online\"}");
     } else {
-      Serial.print("rc="); Serial.println(mqtt.state());
+      Serial.print("rc=");
+      Serial.println(client.state());
       delay(800);
     }
   }
 }
 
-static void initSensors() {
-  if (bme.begin(0x76) || bme.begin(0x77)) hasBme = true;
+void initSensors() {
+  if (bme.begin(0x76) || bme.begin(0x77)) ok_bme = true;
   else Serial.println("no bme280");
 
-  if (luxm.begin(BH1750::CONTINUOUS_HIGH_RES_MODE)) hasLux = true;
+  if (bh.begin(BH1750::CONTINUOUS_HIGH_RES_MODE)) ok_bh = true;
   else Serial.println("no bh1750");
 
-  pinMode(MAG_PIN, INPUT_PULLUP);
+  if (lox.begin()) ok_lox = true;
+  else Serial.println("no vl53l0x");
+
+  pinMode(PIN_MAG, INPUT_PULLUP);
 }
 
 void setup() {
   Serial.begin(115200);
   Wire.begin();
-  wifiUp();
-  mqttUp();
+  wifiConnect();
+  mqttConnect();
   initSensors();
 }
 
 void loop() {
-  if (WiFi.status() != WL_CONNECTED) wifiUp();
-  if (!mqtt.connected()) mqttUp();
-  mqtt.loop();
+  if (WiFi.status() != WL_CONNECTED) wifiConnect();
+  if (!client.connected()) mqttConnect();
+  client.loop();
 
   unsigned long now = millis();
-  if (now - lastTick < period) return;
-  lastTick = now;
+  if (now - lastSend < sendPeriod) return;
+  lastSend = now;
 
   float t = NAN, h = NAN, p = NAN, lx = NAN;
-  if (hasBme) {
+  int mag = 0;
+  int dist = -1;
+
+  if (ok_bme) {
     t = bme.readTemperature();
     h = bme.readHumidity();
     p = bme.readPressure() / 100.0f;
   }
-  if (hasLux) {
-    lx = luxm.readLightLevel();
+  if (ok_bh) {
+    lx = bh.readLightLevel();
   }
-  int mag = (digitalRead(MAG_PIN) == LOW) ? 1 : 0;
+  if (ok_lox) {
+    VL53L0X_RangingMeasurementData_t m;
+    lox.rangingTest(&m, false);
+    if (m.RangeStatus == 0) dist = m.RangeMilliMeter;
+  }
 
-  String js = String("{\"t\":") + (isnan(t)? "null": String(t,1)) +
-              ",\"hum\":" + (isnan(h)? "null": String(h,1)) +
-              ",\"pressure\":" + (isnan(p)? "null": String(p,1)) +
-              ",\"lux\":" + (isnan(lx)? "null": String(lx,1)) +
-              ",\"mag\":" + mag + "}";
+  mag = (digitalRead(PIN_MAG) == LOW) ? 1 : 0;
 
-  bool ok = mqtt.publish(topicPub, js.c_str());
-  Serial.print("pub "); Serial.print(ok? "ok: " : "fail: "); Serial.println(js);
+  String js = "{";
+  js += "\"t\":" + (isnan(t) ? String("null") : String(t,1));
+  js += ",\"hum\":" + (isnan(h) ? String("null") : String(h,1));
+  js += ",\"pressure\":" + (isnan(p) ? String("null") : String(p,1));
+  js += ",\"lux\":" + (isnan(lx) ? String("null") : String(lx,1));
+  js += ",\"mag\":" + String(mag);
+  js += ",\"dist\":" + (dist < 0 ? String("null") : String(dist));
+  js += "}";
+
+  bool s = client.publish(topicPub, js.c_str());
+  Serial.print("pub "); Serial.print(s ? "ok: " : "fail: "); Serial.println(js);
 }
 
