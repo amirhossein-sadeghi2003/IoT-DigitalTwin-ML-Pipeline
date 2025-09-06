@@ -1,0 +1,47 @@
+[
+  {
+    "id": "flow1",
+    "type": "tab",
+    "label": "iot-step1",
+    "disabled": false
+  },
+  {
+    "id": "mqtt-broker1",
+    "type": "mqtt-broker",
+    "name": "hivemq",
+    "broker": "broker.hivemq.com",
+    "port": "1883",
+    "clientid": "",
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true
+  },
+  {
+    "id": "mqtt-in1",
+    "type": "mqtt in",
+    "z": "flow1",
+    "name": "sub sensors",
+    "topic": "iot/test/sensors",
+    "qos": "0",
+    "datatype": "auto",
+    "broker": "mqtt-broker1",
+    "x": 180,
+    "y": 120,
+    "wires": [["debug1"]]
+  },
+  {
+    "id": "debug1",
+    "type": "debug",
+    "z": "flow1",
+    "name": "see raw",
+    "active": true,
+    "tosidebar": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 380,
+    "y": 120,
+    "wires": []
+  }
+]
+
