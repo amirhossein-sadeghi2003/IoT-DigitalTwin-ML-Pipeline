@@ -99,7 +99,7 @@
     "outputs": 2,
     "x": 520,
     "y": 120,
-    "wires": [["chg_status","debug_status"], ["fn_split","debug_data"]]
+    "wires": [["chg_status","debug_status"], ["fn_split","debug_data","fn_split2"]]
   },
   {
     "id": "debug_status",
@@ -205,6 +205,55 @@
     "max": "100",
     "x": 910,
     "y": 260,
+    "wires": []
+  },
+
+
+  {
+    "id": "fn_split2",
+    "type": "function",
+    "z": "flow3",
+    "name": "get lux & mag",
+    "func": "let p = msg.payload||{};\nfunction n(v){return (v===null||v===undefined||Number.isNaN(v))?undefined:v}\nreturn [ {payload:n(p.lux)}, {payload:(p.mag?\"Closed\":\"Open\")} ];",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 700,
+    "y": 300,
+    "wires": [["ui_lux"], ["ui_mag"]]
+  },
+  {
+    "id": "ui_lux",
+    "type": "ui_gauge",
+    "z": "flow3",
+    "name": "lux",
+    "group": "ui_grp_env",
+    "order": 3,
+    "width": 6,
+    "height": 3,
+    "gtype": "gage",
+    "title": "Light (lux)",
+    "label": "lux",
+    "format": "{{value}}",
+    "min": "0",
+    "max": "10000",
+    "x": 910,
+    "y": 300,
+    "wires": []
+  },
+  {
+    "id": "ui_mag",
+    "type": "ui_text",
+    "z": "flow3",
+    "group": "ui_grp_status",
+    "order": 2,
+    "width": 12,
+    "height": 1,
+    "name": "mag txt",
+    "label": "magnet",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "x": 910,
+    "y": 340,
     "wires": []
   }
 ]
