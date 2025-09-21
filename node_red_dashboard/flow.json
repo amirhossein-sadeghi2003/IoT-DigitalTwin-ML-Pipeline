@@ -99,13 +99,13 @@
     "outputs": 2,
     "x": 520,
     "y": 120,
-    "wires": [["chg_status","debug_status"], ["fn_split","debug_data","fn_split2"]]
+    "wires": [["chg_status","debug_status"], ["fn_th","debug_data","fn_lm","fn_pd"]]
   },
   {
     "id": "debug_status",
     "type": "debug",
     "z": "flow3",
-    "name": "status dbg",
+    "name": "status",
     "active": true,
     "tosidebar": true,
     "complete": "payload.status",
@@ -118,7 +118,7 @@
     "id": "debug_data",
     "type": "debug",
     "z": "flow3",
-    "name": "data dbg",
+    "name": "data",
     "active": true,
     "tosidebar": true,
     "complete": "payload",
@@ -131,7 +131,7 @@
     "id": "chg_status",
     "type": "change",
     "z": "flow3",
-    "name": "to status text",
+    "name": "to text",
     "rules": [
       { "t":"set", "p":"payload", "pt":"msg", "to":"payload.status", "tot":"msg" }
     ],
@@ -150,21 +150,19 @@
     "name": "status txt",
     "label": "status",
     "format": "{{msg.payload}}",
-    "layout": "row-spread",
     "x": 910,
     "y": 120,
     "wires": []
   },
+
   {
-    "id": "fn_split",
+    "id": "fn_th",
     "type": "function",
     "z": "flow3",
-    "name": "get t & hum",
-    "func": "let p = msg.payload||{};\nfunction n(v){return (v===null||v===undefined||Number.isNaN(v))?undefined:v}\nreturn [ {payload:n(p.t)}, {payload:n(p.hum)} ];",
+    "name": "t&h",
+    "func": "let p = msg.payload || {};\nlet t = (p.t==null || isNaN(p.t)) ? undefined : Number(p.t);\nlet h = (p.hum==null || isNaN(p.hum)) ? undefined : Number(p.hum);\nreturn [{payload:t},{payload:h}];",
     "outputs": 2,
     "noerr": 0,
-    "initialize": "",
-    "finalize": "",
     "x": 700,
     "y": 220,
     "wires": [["ui_temp"], ["ui_hum"]]
@@ -208,13 +206,12 @@
     "wires": []
   },
 
-
   {
-    "id": "fn_split2",
+    "id": "fn_lm",
     "type": "function",
     "z": "flow3",
-    "name": "get lux & mag",
-    "func": "let p = msg.payload||{};\nfunction n(v){return (v===null||v===undefined||Number.isNaN(v))?undefined:v}\nreturn [ {payload:n(p.lux)}, {payload:(p.mag?\"Closed\":\"Open\")} ];",
+    "name": "lux&mag",
+    "func": "let p = msg.payload || {};\nlet lx = (p.lux==null || isNaN(p.lux)) ? undefined : Number(p.lux);\nlet mg = p.mag ? \"Closed\" : \"Open\";\nreturn [{payload:lx},{payload:mg}];",
     "outputs": 2,
     "noerr": 0,
     "x": 700,
@@ -248,12 +245,62 @@
     "order": 2,
     "width": 12,
     "height": 1,
-    "name": "mag txt",
+    "name": "mag",
     "label": "magnet",
     "format": "{{msg.payload}}",
-    "layout": "row-spread",
     "x": 910,
     "y": 340,
+    "wires": []
+  },
+
+  {
+    "id": "fn_pd",
+    "type": "function",
+    "z": "flow3",
+    "name": "p&d",
+    "func": "// expect: payload.pressure (hPa), payload.dist (mm)\nlet p = msg.payload || {};\nfunction num(v){ return (v==null || Number.isNaN(Number(v))) ? undefined : Number(v); }\nlet pr = num(p.pressure);\nlet d  = num(p.dist);\nreturn [{ payload: pr }, { payload: d }];",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 700,
+    "y": 380,
+    "wires": [["ui_press"], ["ui_dist"]]
+  },
+  {
+    "id": "ui_press",
+    "type": "ui_gauge",
+    "z": "flow3",
+    "name": "press",
+    "group": "ui_grp_env",
+    "order": 4,
+    "width": 6,
+    "height": 3,
+    "gtype": "gage",
+    "title": "Pressure (hPa)",
+    "label": "hPa",
+    "format": "{{value}}",
+    "min": "800",
+    "max": "1100",
+    "x": 910,
+    "y": 380,
+    "wires": []
+  },
+  {
+    "id": "ui_dist",
+    "type": "ui_gauge",
+    "z": "flow3",
+    "name": "dist",
+    "group": "ui_grp_env",
+    "order": 5,
+    "width": 6,
+    "height": 3,
+    "gtype": "gage",
+    "title": "Distance (mm)",
+    "label": "mm",
+    "format": "{{value}}",
+    "min": "0",
+    "max": "2000",
+    "x": 910,
+    "y": 420,
     "wires": []
   }
 ]
