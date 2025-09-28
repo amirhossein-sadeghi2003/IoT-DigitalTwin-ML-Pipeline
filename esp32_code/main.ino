@@ -5,7 +5,13 @@
 #include <Adafruit_BME280.h>
 #include <BH1750.h>
 #include <Adafruit_VL53L0X.h>
-// replace your ssid and pass word
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
 const char* ssid = "your_ssid";
 const char* pass = "your_password";
 
@@ -24,28 +30,30 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 bool ok_bme = false;
 bool ok_bh = false;
 bool ok_lox = false;
+bool ok_oled = false;
 
 const int PIN_MAG = 18;
 unsigned long lastSend = 0;
 const unsigned long sendPeriod = 3000;
 
+uint8_t curPage = 0;
+unsigned long lastPageSwitch = 0;
+const unsigned long pagePeriod = 5000;
+
+float g_t = NAN, g_h = NAN, g_p = NAN, g_lx = NAN;
+int   g_mag = 0, g_dist = -1;
+
 void wifiConnect() {
   if (WiFi.status() == WL_CONNECTED) return;
-  Serial.print("wifi..");
   WiFi.begin(ssid, pass);
   int c = 0;
   while (WiFi.status() != WL_CONNECTED && c < 40) {
     delay(500);
-    Serial.print(".");
     c++;
   }
-  Serial.println(WiFi.status() == WL_CONNECTED ? "ok" : "fail");
 }
 
 void mqttCallback(char* topic, byte* msg, unsigned int len) {
-  Serial.print("[msg] ");
-  Serial.print(topic);
-  Serial.print(" => ");
   for (unsigned int i = 0; i < len; i++) {
     Serial.print((char)msg[i]);
   }
@@ -57,14 +65,10 @@ void mqttConnect() {
   client.setCallback(mqttCallback);
   while (!client.connected()) {
     String cid = "esp32-" + String((uint32_t)ESP.getEfuseMac(), HEX);
-    Serial.print("mqtt..");
     if (client.connect(cid.c_str())) {
-      Serial.println("ok");
       client.subscribe(topicSub);
       client.publish(topicPub, "{\"status\":\"online\"}");
     } else {
-      Serial.print("rc=");
-      Serial.println(client.state());
       delay(800);
     }
   }
@@ -72,23 +76,75 @@ void mqttConnect() {
 
 void initSensors() {
   if (bme.begin(0x76) || bme.begin(0x77)) ok_bme = true;
-  else Serial.println("no bme280");
-
   if (bh.begin(BH1750::CONTINUOUS_HIGH_RES_MODE)) ok_bh = true;
-  else Serial.println("no bh1750");
-
   if (lox.begin()) ok_lox = true;
-  else Serial.println("no vl53l0x");
-
   pinMode(PIN_MAG, INPUT_PULLUP);
+}
+
+void printLine(int16_t y, const char* label, const String &val) {
+  display.setCursor(0, y);
+  display.print(label);
+  display.print(": ");
+  display.print(val);
+}
+
+String f1(float x) {
+  if (isnan(x)) return String("--");
+  return String(x, 1);
+}
+
+String i1(int x) {
+  if (x < 0) return String("--");
+  return String(x);
+}
+
+void drawOLED() {
+  if (!ok_oled) return;
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+
+  if (curPage == 0) {
+    display.setCursor(0, 0);
+    display.println("Sensors (1/2)");
+    printLine(16, "T(C)",  f1(g_t));
+    printLine(28, "Hum(%)", f1(g_h));
+    printLine(40, "P(hPa)", f1(g_p));
+    display.setCursor(0, 56);
+    display.print("WiFi:");
+    display.print(WiFi.status() == WL_CONNECTED ? "OK" : "X");
+    display.print(" MQTT:");
+    display.print(client.connected() ? "OK" : "X");
+  } else {
+    display.setCursor(0, 0);
+    display.println("Sensors (2/2)");
+    printLine(16, "Lux",   f1(g_lx));
+    printLine(28, "Mag",   String(g_mag));
+    printLine(40, "Dist",  i1(g_dist));
+    display.setCursor(0, 56);
+    display.print("IP:");
+    display.print(WiFi.localIP());
+  }
+
+  display.display();
 }
 
 void setup() {
   Serial.begin(115200);
   Wire.begin();
+  if (display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    ok_oled = true;
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0, 0);
+    display.println("Booting...");
+    display.display();
+  }
   wifiConnect();
   mqttConnect();
   initSensors();
+  drawOLED();
 }
 
 void loop() {
@@ -97,6 +153,13 @@ void loop() {
   client.loop();
 
   unsigned long now = millis();
+
+  if (now - lastPageSwitch >= pagePeriod) {
+    curPage = (curPage == 0) ? 1 : 0;
+    lastPageSwitch = now;
+    drawOLED();
+  }
+
   if (now - lastSend < sendPeriod) return;
   lastSend = now;
 
@@ -120,6 +183,8 @@ void loop() {
 
   mag = (digitalRead(PIN_MAG) == LOW) ? 1 : 0;
 
+  g_t = t; g_h = h; g_p = p; g_lx = lx; g_mag = mag; g_dist = dist;
+
   String js = "{";
   js += "\"t\":" + (isnan(t) ? String("null") : String(t,1));
   js += ",\"hum\":" + (isnan(h) ? String("null") : String(h,1));
@@ -129,7 +194,9 @@ void loop() {
   js += ",\"dist\":" + (dist < 0 ? String("null") : String(dist));
   js += "}";
 
-  bool s = client.publish(topicPub, js.c_str());
-  Serial.print("pub "); Serial.print(s ? "ok: " : "fail: "); Serial.println(js);
+  client.publish(topicPub, js.c_str());
+  Serial.println(js);
+
+  drawOLED();
 }
 
