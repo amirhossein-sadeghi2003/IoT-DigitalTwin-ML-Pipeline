@@ -7,10 +7,15 @@
 #include <Adafruit_VL53L0X.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <Adafruit_NeoPixel.h>
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+#define LED_PIN 5
+#define LED_COUNT 6
+Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 const char* ssid = "your_ssid";
 const char* pass = "your_password";
@@ -18,7 +23,9 @@ const char* pass = "your_password";
 const char* mqttHost = "broker.hivemq.com";
 const uint16_t mqttPort = 1883;
 const char* topicPub = "iot/test/sensors";
-const char* topicSub = "iot/cmd/arm";
+const char* topicSubAct = "iot/cmd/act";
+const char* topicSubMode = "iot/cmd/mode";
+const char* topicStatusMode = "iot/status/mode";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -36,12 +43,13 @@ const int PIN_MAG = 18;
 unsigned long lastSend = 0;
 const unsigned long sendPeriod = 3000;
 
-uint8_t curPage = 0;
-unsigned long lastPageSwitch = 0;
-const unsigned long pagePeriod = 5000;
-
 float g_t = NAN, g_h = NAN, g_p = NAN, g_lx = NAN;
-int   g_mag = 0, g_dist = -1;
+int g_mag = 0, g_dist = -1;
+
+bool heater_on=0, cooler_on=0, flood_on=0, window_open=0, ai_mode=0, alarm_on=0;
+bool alarm_blink=0;
+unsigned long last_blink=0;
+const unsigned long blink_period=300;
 
 void wifiConnect() {
   if (WiFi.status() == WL_CONNECTED) return;
@@ -53,11 +61,36 @@ void wifiConnect() {
   }
 }
 
+void led_update() {
+  strip.clear();
+  if (heater_on) strip.setPixelColor(0, strip.Color(255,0,0));
+  if (cooler_on) strip.setPixelColor(1, strip.Color(0,0,255));
+  if (flood_on)  strip.setPixelColor(2, strip.Color(180,180,180));
+  if (window_open) strip.setPixelColor(3, strip.Color(0,180,0));
+  if (ai_mode) strip.setPixelColor(4, strip.Color(0,180,0));
+  else strip.setPixelColor(4, strip.Color(0,0,180));
+  if (alarm_on) { if (alarm_blink) strip.setPixelColor(5, strip.Color(255,0,0)); }
+  strip.show();
+}
+
 void mqttCallback(char* topic, byte* msg, unsigned int len) {
-  for (unsigned int i = 0; i < len; i++) {
-    Serial.print((char)msg[i]);
+  String m = "";
+  for (unsigned int i=0;i<len;i++) m += (char)msg[i];
+
+  if (String(topic) == topicSubAct) {
+    if (m.startsWith("heater=")) heater_on = (m.endsWith("1"));
+    else if (m.startsWith("cooler=")) cooler_on = (m.endsWith("1"));
+    else if (m.startsWith("flood=")) flood_on = (m.endsWith("1"));
+    else if (m.startsWith("window=")) window_open = (m.endsWith("1"));
+    else if (m.startsWith("alarm=")) alarm_on = (m.endsWith("1"));
+    led_update();
+  } else if (String(topic) == topicSubMode) {
+    if (m=="ai") ai_mode=1;
+    else ai_mode=0;
+    led_update();
+    String js = "{\"mode\":\"" + String(ai_mode ? "ai" : "rules") + "\"}";
+    client.publish(topicStatusMode, js.c_str());
   }
-  Serial.println();
 }
 
 void mqttConnect() {
@@ -66,7 +99,8 @@ void mqttConnect() {
   while (!client.connected()) {
     String cid = "esp32-" + String((uint32_t)ESP.getEfuseMac(), HEX);
     if (client.connect(cid.c_str())) {
-      client.subscribe(topicSub);
+      client.subscribe(topicSubAct);
+      client.subscribe(topicSubMode);
       client.publish(topicPub, "{\"status\":\"online\"}");
     } else {
       delay(800);
@@ -88,15 +122,8 @@ void printLine(int16_t y, const char* label, const String &val) {
   display.print(val);
 }
 
-String f1(float x) {
-  if (isnan(x)) return String("--");
-  return String(x, 1);
-}
-
-String i1(int x) {
-  if (x < 0) return String("--");
-  return String(x);
-}
+String f1(float x) { if (isnan(x)) return String("--"); return String(x,1); }
+String i1(int x) { if (x<0) return String("--"); return String(x); }
 
 void drawOLED() {
   if (!ok_oled) return;
@@ -104,28 +131,11 @@ void drawOLED() {
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
 
-  if (curPage == 0) {
-    display.setCursor(0, 0);
-    display.println("Sensors (1/2)");
-    printLine(16, "T(C)",  f1(g_t));
-    printLine(28, "Hum(%)", f1(g_h));
-    printLine(40, "P(hPa)", f1(g_p));
-    display.setCursor(0, 56);
-    display.print("WiFi:");
-    display.print(WiFi.status() == WL_CONNECTED ? "OK" : "X");
-    display.print(" MQTT:");
-    display.print(client.connected() ? "OK" : "X");
-  } else {
-    display.setCursor(0, 0);
-    display.println("Sensors (2/2)");
-    printLine(16, "Lux",   f1(g_lx));
-    printLine(28, "Mag",   String(g_mag));
-    printLine(40, "Dist",  i1(g_dist));
-    display.setCursor(0, 56);
-    display.print("IP:");
-    display.print(WiFi.localIP());
-  }
-
+  display.setCursor(0, 0);
+  display.println("Sensors");
+  printLine(16, "T(C)", f1(g_t));
+  printLine(28, "Hum(%)", f1(g_h));
+  printLine(40, "Lux", f1(g_lx));
   display.display();
 }
 
@@ -137,14 +147,17 @@ void setup() {
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, 0);
+    display.setCursor(0,0);
     display.println("Booting...");
     display.display();
   }
+  strip.begin();
+  strip.setBrightness(40);
+  strip.show();
   wifiConnect();
   mqttConnect();
   initSensors();
-  drawOLED();
+  led_update();
 }
 
 void loop() {
@@ -153,50 +166,46 @@ void loop() {
   client.loop();
 
   unsigned long now = millis();
-
-  if (now - lastPageSwitch >= pagePeriod) {
-    curPage = (curPage == 0) ? 1 : 0;
-    lastPageSwitch = now;
-    drawOLED();
+  if (alarm_on) {
+    if (now - last_blink >= blink_period) {
+      last_blink = now;
+      alarm_blink = !alarm_blink;
+      led_update();
+    }
+  } else {
+    if (alarm_blink) { alarm_blink=0; led_update(); }
   }
 
   if (now - lastSend < sendPeriod) return;
   lastSend = now;
 
-  float t = NAN, h = NAN, p = NAN, lx = NAN;
-  int mag = 0;
-  int dist = -1;
+  float t=NAN,h=NAN,p=NAN,lx=NAN;
+  int mag=0,dist=-1;
 
   if (ok_bme) {
-    t = bme.readTemperature();
-    h = bme.readHumidity();
-    p = bme.readPressure() / 100.0f;
+    t=bme.readTemperature();
+    h=bme.readHumidity();
+    p=bme.readPressure()/100.0f;
   }
-  if (ok_bh) {
-    lx = bh.readLightLevel();
-  }
+  if (ok_bh) lx=bh.readLightLevel();
   if (ok_lox) {
     VL53L0X_RangingMeasurementData_t m;
     lox.rangingTest(&m, false);
-    if (m.RangeStatus == 0) dist = m.RangeMilliMeter;
+    if (m.RangeStatus==0) dist=m.RangeMilliMeter;
   }
+  mag=(digitalRead(PIN_MAG)==LOW)?1:0;
 
-  mag = (digitalRead(PIN_MAG) == LOW) ? 1 : 0;
+  g_t=t; g_h=h; g_p=p; g_lx=lx; g_mag=mag; g_dist=dist;
 
-  g_t = t; g_h = h; g_p = p; g_lx = lx; g_mag = mag; g_dist = dist;
-
-  String js = "{";
-  js += "\"t\":" + (isnan(t) ? String("null") : String(t,1));
-  js += ",\"hum\":" + (isnan(h) ? String("null") : String(h,1));
-  js += ",\"pressure\":" + (isnan(p) ? String("null") : String(p,1));
-  js += ",\"lux\":" + (isnan(lx) ? String("null") : String(lx,1));
-  js += ",\"mag\":" + String(mag);
-  js += ",\"dist\":" + (dist < 0 ? String("null") : String(dist));
-  js += "}";
+  String js="{";
+  js+="\"t\":"+(isnan(t)?String("null"):String(t,1));
+  js+=",\"hum\":"+(isnan(h)?String("null"):String(h,1));
+  js+=",\"lux\":"+(isnan(lx)?String("null"):String(lx,1));
+  js+=",\"mag\":"+String(mag);
+  js+=",\"dist\":"+(dist<0?String("null"):String(dist));
+  js+="}";
 
   client.publish(topicPub, js.c_str());
-  Serial.println(js);
-
   drawOLED();
 }
 
