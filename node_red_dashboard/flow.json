@@ -1,676 +1,672 @@
 [
-  {
-    "id": "flow3",
-    "type": "tab",
-    "label": "iot-control",
-    "disabled": false
-  },
-  {
-    "id": "mqtt_broker",
-    "type": "mqtt-broker",
-    "name": "hivemq",
-    "broker": "broker.hivemq.com",
-    "port": "1883",
-    "clientid": "",
-    "usetls": false,
-    "protocolVersion": "4",
-    "keepalive": "60",
-    "cleansession": true
-  },
-  {
-    "id": "ui_tab",
-    "type": "ui_tab",
-    "name": "ESP32 Control",
-    "icon": "dashboard",
-    "disabled": false,
-    "hidden": false
-  },
-  {
-    "id": "ui_group_status",
-    "type": "ui_group",
-    "name": "Status",
-    "tab": "ui_tab",
-    "order": 1,
-    "disp": true,
-    "width": "12",
-    "collapse": false
-  },
-  {
-    "id": "ui_group_sensors",
-    "type": "ui_group",
-    "name": "Sensors",
-    "tab": "ui_tab",
-    "order": 2,
-    "disp": true,
-    "width": "12",
-    "collapse": false
-  },
-  {
-    "id": "ui_group_controls",
-    "type": "ui_group",
-    "name": "Controls",
-    "tab": "ui_tab",
-    "order": 3,
-    "disp": true,
-    "width": "12",
-    "collapse": false
-  },
-  {
-    "id": "mqtt_in_sensors",
-    "type": "mqtt in",
-    "z": "flow3",
-    "name": "subscribe_sensors",
-    "topic": "iot/test/sensors",
-    "qos": "0",
-    "datatype": "auto",
-    "broker": "mqtt_broker",
-    "nl": false,
-    "rap": true,
-    "rh": 0,
-    "x": 160,
-    "y": 120,
-    "wires": [
-      [
-        "json_parser",
-        "debug_raw_data"
-      ]
-    ]
-  },
-  {
-    "id": "debug_raw_data",
-    "type": "debug",
-    "z": "flow3",
-    "name": "raw_data",
-    "active": true,
-    "tosidebar": true,
-    "complete": "payload",
-    "targetType": "msg",
-    "x": 360,
-    "y": 80,
-    "wires": []
-  },
-  {
-    "id": "json_parser",
-    "type": "json",
-    "z": "flow3",
-    "name": "parse_json",
-    "property": "payload",
-    "action": "",
-    "pretty": false,
-    "x": 350,
-    "y": 120,
-    "wires": [
-      [
-        "check_status"
-      ]
-    ]
-  },
-  {
-    "id": "check_status",
-    "type": "switch",
-    "z": "flow3",
-    "name": "has_status",
-    "property": "payload.status",
-    "propertyType": "msg",
-    "rules": [
-      {
-        "t": "hask"
-      },
-      {
-        "t": "else"
-      }
-    ],
-    "checkall": "true",
-    "repair": false,
-    "outputs": 2,
-    "x": 520,
-    "y": 120,
-    "wires": [
-      [
-        "convert_status",
-        "debug_status"
-      ],
-      [
-        "process_temp_humidity",
-        "debug_sensor_data",
-        "process_light_magnet",
-        "process_pressure_distance"
-      ]
-    ]
-  },
-  {
-    "id": "debug_status",
-    "type": "debug",
-    "z": "flow3",
-    "name": "status",
-    "active": true,
-    "tosidebar": true,
-    "complete": "payload.status",
-    "targetType": "msg",
-    "x": 720,
-    "y": 80,
-    "wires": []
-  },
-  {
-    "id": "debug_sensor_data",
-    "type": "debug",
-    "z": "flow3",
-    "name": "sensor_data",
-    "active": true,
-    "tosidebar": true,
-    "complete": "payload",
-    "targetType": "msg",
-    "x": 720,
-    "y": 180,
-    "wires": []
-  },
-  {
-    "id": "convert_status",
-    "type": "change",
-    "z": "flow3",
-    "name": "to_text",
-    "rules": [
-      {
-        "t": "set",
-        "p": "payload",
-        "pt": "msg",
-        "to": "payload.status",
-        "tot": "msg"
-      }
-    ],
-    "x": 720,
-    "y": 120,
-    "wires": [
-      [
-        "ui_status_text"
-      ]
-    ]
-  },
-  {
-    "id": "ui_status_text",
-    "type": "ui_text",
-    "z": "flow3",
-    "group": "ui_group_status",
-    "order": 1,
-    "width": 12,
-    "height": 1,
-    "name": "status_display",
-    "label": "Status",
-    "format": "{{msg.payload}}",
-    "x": 910,
-    "y": 120,
-    "wires": []
-  },
-  {
-    "id": "process_temp_humidity",
-    "type": "function",
-    "z": "flow3",
-    "name": "temp_humidity",
-    "func": "let data = msg.payload || {};\nlet temp = (data.temp == null || isNaN(data.temp)) ? undefined : Number(data.temp);\nlet humidity = (data.humidity == null || isNaN(data.humidity)) ? undefined : Number(data.humidity);\nreturn [{payload: temp}, {payload: humidity}];",
-    "outputs": 2,
-    "noerr": 0,
-    "x": 700,
-    "y": 220,
-    "wires": [
-      [
-        "ui_temp_gauge"
-      ],
-      [
-        "ui_humidity_gauge"
-      ]
-    ]
-  },
-  {
-    "id": "ui_temp_gauge",
-    "type": "ui_gauge",
-    "z": "flow3",
-    "name": "temperature",
-    "group": "ui_group_sensors",
-    "order": 1,
-    "width": 6,
-    "height": 3,
-    "gtype": "gage",
-    "title": "Temperature (C)",
-    "label": "C",
-    "format": "{{value}}",
-    "min": "0",
-    "max": "50",
-    "x": 910,
-    "y": 220,
-    "wires": []
-  },
-  {
-    "id": "ui_humidity_gauge",
-    "type": "ui_gauge",
-    "z": "flow3",
-    "name": "humidity",
-    "group": "ui_group_sensors",
-    "order": 2,
-    "width": 6,
-    "height": 3,
-    "gtype": "gage",
-    "title": "Humidity (%)",
-    "label": "%",
-    "format": "{{value}}",
-    "min": "0",
-    "max": "100",
-    "x": 910,
-    "y": 260,
-    "wires": []
-  },
-  {
-    "id": "process_light_magnet",
-    "type": "function",
-    "z": "flow3",
-    "name": "light_magnet",
-    "func": "let data = msg.payload || {};\nlet light = (data.light == null || isNaN(data.light)) ? undefined : Number(data.light);\nlet magnet = data.magnet ? \"Closed\" : \"Open\";\nreturn [{payload: light}, {payload: magnet}];",
-    "outputs": 2,
-    "noerr": 0,
-    "x": 700,
-    "y": 300,
-    "wires": [
-      [
-        "ui_light_gauge"
-      ],
-      [
-        "ui_magnet_text"
-      ]
-    ]
-  },
-  {
-    "id": "ui_light_gauge",
-    "type": "ui_gauge",
-    "z": "flow3",
-    "name": "light",
-    "group": "ui_group_sensors",
-    "order": 3,
-    "width": 6,
-    "height": 3,
-    "gtype": "gage",
-    "title": "Light (lux)",
-    "label": "lux",
-    "format": "{{value}}",
-    "min": "0",
-    "max": "10000",
-    "x": 910,
-    "y": 300,
-    "wires": []
-  },
-  {
-    "id": "ui_magnet_text",
-    "type": "ui_text",
-    "z": "flow3",
-    "group": "ui_group_status",
-    "order": 2,
-    "width": 12,
-    "height": 1,
-    "name": "magnet_status",
-    "label": "Magnet",
-    "format": "{{msg.payload}}",
-    "x": 910,
-    "y": 340,
-    "wires": []
-  },
-  {
-    "id": "process_pressure_distance",
-    "type": "function",
-    "z": "flow3",
-    "name": "pressure_distance",
-    "func": "let data = msg.payload || {};\nfunction to_number(value) { return (value == null || isNaN(Number(value))) ? undefined : Number(value); }\nlet pressure = to_number(data.pressure);\nlet distance = to_number(data.distance);\nreturn [{ payload: pressure }, { payload: distance }];",
-    "outputs": 2,
-    "noerr": 0,
-    "x": 700,
-    "y": 380,
-    "wires": [
-      [
-        "ui_pressure_gauge"
-      ],
-      [
-        "ui_distance_gauge"
-      ]
-    ]
-  },
-  {
-    "id": "ui_pressure_gauge",
-    "type": "ui_gauge",
-    "z": "flow3",
-    "name": "pressure",
-    "group": "ui_group_sensors",
-    "order": 4,
-    "width": 6,
-    "height": 3,
-    "gtype": "gage",
-    "title": "Pressure (hPa)",
-    "label": "hPa",
-    "format": "{{value}}",
-    "min": "800",
-    "max": "1100",
-    "x": 910,
-    "y": 380,
-    "wires": []
-  },
-  {
-    "id": "ui_distance_gauge",
-    "type": "ui_gauge",
-    "z": "flow3",
-    "name": "distance",
-    "group": "ui_group_sensors",
-    "order": 5,
-    "width": 6,
-    "height": 3,
-    "gtype": "gage",
-    "title": "Distance (mm)",
-    "label": "mm",
-    "format": "{{value}}",
-    "min": "0",
-    "max": "2000",
-    "x": 910,
-    "y": 420,
-    "wires": []
-  },
-  {
-    "id": "ui_heater_switch",
-    "type": "ui_switch",
-    "z": "flow3",
-    "name": "heater_control",
-    "label": "Heater",
-    "group": "ui_group_controls",
-    "order": 1,
-    "width": 6,
-    "height": 1,
-    "passthru": false,
-    "decouple": "false",
-    "topic": "",
-    "style": "",
-    "onvalue": "heater=1",
-    "onvalueType": "str",
-    "onicon": "",
-    "oncolor": "",
-    "offvalue": "heater=0",
-    "offvalueType": "str",
-    "officon": "",
-    "offcolor": "",
-    "animate": true,
-    "x": 160,
-    "y": 500,
-    "wires": [
-      [
-        "mqtt_publish_control"
-      ]
-    ]
-  },
-  {
-    "id": "ui_cooler_switch",
-    "type": "ui_switch",
-    "z": "flow3",
-    "name": "cooler_control",
-    "label": "Cooler",
-    "group": "ui_group_controls",
-    "order": 2,
-    "width": 6,
-    "height": 1,
-    "passthru": false,
-    "decouple": "false",
-    "topic": "",
-    "style": "",
-    "onvalue": "cooler=1",
-    "onvalueType": "str",
-    "onicon": "",
-    "oncolor": "",
-    "offvalue": "cooler=0",
-    "offvalueType": "str",
-    "officon": "",
-    "offcolor": "",
-    "animate": true,
-    "x": 160,
-    "y": 560,
-    "wires": [
-      [
-        "mqtt_publish_control"
-      ]
-    ]
-  },
-  {
-    "id": "ui_flood_switch",
-    "type": "ui_switch",
-    "z": "flow3",
-    "name": "flood_control",
-    "label": "Flood",
-    "group": "ui_group_controls",
-    "order": 3,
-    "width": 6,
-    "height": 1,
-    "passthru": false,
-    "decouple": "false",
-    "topic": "",
-    "style": "",
-    "onvalue": "flood=1",
-    "onvalueType": "str",
-    "onicon": "",
-    "oncolor": "",
-    "offvalue": "flood=0",
-    "offvalueType": "str",
-    "officon": "",
-    "offcolor": "",
-    "animate": true,
-    "x": 160,
-    "y": 620,
-    "wires": [
-      [
-        "mqtt_publish_control"
-      ]
-    ]
-  },
-  {
-    "id": "ui_window_switch",
-    "type": "ui_switch",
-    "z": "flow3",
-    "name": "window_control",
-    "label": "Window",
-    "group": "ui_group_controls",
-    "order": 4,
-    "width": 6,
-    "height": 1,
-    "passthru": false,
-    "decouple": "false",
-    "topic": "",
-    "style": "",
-    "onvalue": "window=1",
-    "onvalueType": "str",
-    "onicon": "",
-    "oncolor": "",
-    "offvalue": "window=0",
-    "offvalueType": "str",
-    "officon": "",
-    "offcolor": "",
-    "animate": true,
-    "x": 160,
-    "y": 680,
-    "wires": [
-      [
-        "mqtt_publish_control"
-      ]
-    ]
-  },
-  {
-    "id": "ui_alarm_switch",
-    "type": "ui_switch",
-    "z": "flow3",
-    "name": "alarm_control",
-    "label": "Alarm",
-    "group": "ui_group_controls",
-    "order": 5,
-    "width": 6,
-    "height": 1,
-    "passthru": false,
-    "decouple": "false",
-    "topic": "",
-    "style": "",
-    "onvalue": "alarm=1",
-    "onvalueType": "str",
-    "onicon": "",
-    "oncolor": "",
-    "offvalue": "alarm=0",
-    "offvalueType": "str",
-    "officon": "",
-    "offcolor": "",
-    "animate": true,
-    "x": 160,
-    "y": 740,
-    "wires": [
-      [
-        "mqtt_publish_control"
-      ]
-    ]
-  },
-  {
-    "id": "ui_mode_switch",
-    "type": "ui_switch",
-    "z": "flow3",
-    "name": "mode_control",
-    "label": "AI Mode",
-    "group": "ui_group_controls",
-    "order": 6,
-    "width": 6,
-    "height": 1,
-    "passthru": false,
-    "decouple": "false",
-    "topic": "",
-    "style": "",
-    "onvalue": "mode=ai",
-    "onvalueType": "str",
-    "onicon": "",
-    "oncolor": "",
-    "offvalue": "mode=rule",
-    "offvalueType": "str",
-    "officon": "",
-    "offcolor": "",
-    "animate": true,
-    "x": 160,
-    "y": 800,
-    "wires": [
-      [
-        "mqtt_publish_control"
-      ]
-    ]
-  },
-  {
-    "id": "mqtt_publish_control",
-    "type": "mqtt out",
-    "z": "flow3",
-    "name": "publish_control",
-    "topic": "iot/cmd/act",
-    "qos": "",
-    "retain": "true",
-    "respTopic": "",
-    "contentType": "",
-    "userProps": "",
-    "correl": "",
-    "expiry": "",
-    "broker": "mqtt_broker",
-    "x": 360,
-    "y": 590,
-    "wires": []
-  },
-  {
-    "id": "mqtt_subscribe_control",
-    "type": "mqtt in",
-    "z": "flow3",
-    "name": "subscribe_control",
-    "topic": "iot/cmd/act",
-    "qos": "0",
-    "datatype": "auto",
-    "broker": "mqtt_broker",
-    "nl": false,
-    "rap": true,
-    "rh": 0,
-    "x": 160,
-    "y": 860,
-    "wires": [
-      [
-        "parse_control_message"
-      ]
-    ]
-  },
-  {
-    "id": "parse_control_message",
-    "type": "function",
-    "z": "flow3",
-    "name": "parse_control",
-    "func": "let message = msg.payload;\nif (typeof message !== 'string') return null;\nif (message.startsWith('heater=')) {\n  msg.payload = message.endsWith('1');\n  msg.topic = 'heater';\n} else if (message.startsWith('cooler=')) {\n  msg.payload = message.endsWith('1');\n  msg.topic = 'cooler';\n} else if (message.startsWith('flood=')) {\n  msg.payload = message.endsWith('1');\n  msg.topic = 'flood';\n} else if (message.startsWith('window=')) {\n  msg.payload = message.endsWith('1');\n  msg.topic = 'window';\n} else if (message.startsWith('alarm=')) {\n  msg.payload = message.endsWith('1');\n  msg.topic = 'alarm';\n} else if (message.startsWith('mode=')) {\n  msg.payload = message.endsWith('ai');\n  msg.topic = 'mode';\n}\nreturn msg;",
-    "outputs": 1,
-    "noerr": 0,
-    "x": 360,
-    "y": 860,
-    "wires": [
-      [
-        "route_control_message"
-      ]
-    ]
-  },
-  {
-    "id": "route_control_message",
-    "type": "switch",
-    "z": "flow3",
-    "name": "route_control",
-    "property": "topic",
-    "propertyType": "msg",
-    "rules": [
-      {
-        "t": "eq",
-        "v": "heater",
-        "vt": "str"
-      },
-      {
-        "t": "eq",
-        "v": "cooler",
-        "vt": "str"
-      },
-      {
-        "t": "eq",
-        "v": "flood",
-        "vt": "str"
-      },
-      {
-        "t": "eq",
-        "v": "window",
-        "vt": "str"
-      },
-      {
-        "t": "eq",
-        "v": "alarm",
-        "vt": "str"
-      },
-      {
-        "t": "eq",
-        "v": "mode",
-        "vt": "str"
-      }
-    ],
-    "checkall": "true",
-    "repair": false,
-    "outputs": 6,
-    "x": 560,
-    "y": 590,
-    "wires": [
-      [
-        "ui_heater_switch"
-      ],
-      [
-        "ui_cooler_switch"
-      ],
-      [
-        "ui_flood_switch"
-      ],
-      [
-        "ui_window_switch"
-      ],
-      [
-        "ui_alarm_switch"
-      ],
-      [
-        "ui_mode_switch"
-      ]
-    ]
-  }
+    {
+        "id": "855d2da34cd02ed6",
+        "type": "tab",
+        "label": "iot-control",
+        "disabled": false
+    },
+    {
+        "id": "6eceab9efbf09f45",
+        "type": "mqtt in",
+        "z": "855d2da34cd02ed6",
+        "name": "subscribe_sensors",
+        "topic": "iot/test/sensors",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "mqtt_broker",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 160,
+        "y": 120,
+        "wires": [
+            [
+                "bd2df975e5243471"
+            ]
+        ]
+    },
+    {
+        "id": "bd2df975e5243471",
+        "type": "json",
+        "z": "855d2da34cd02ed6",
+        "name": "parse_json",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 350,
+        "y": 120,
+        "wires": [
+            [
+                "346776c2eb117e51"
+            ]
+        ]
+    },
+    {
+        "id": "346776c2eb117e51",
+        "type": "switch",
+        "z": "855d2da34cd02ed6",
+        "name": "has_status",
+        "property": "payload.status",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "hask"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 520,
+        "y": 120,
+        "wires": [
+            [
+                "2bc8b31f9b1a53af"
+            ],
+            [
+                "d886e24d47a137bc",
+                "80cf827d1e2a6cf0",
+                "6a17a16fe8e3d8c7",
+                "1fd3f758747ca043"
+            ]
+        ]
+    },
+    {
+        "id": "2bc8b31f9b1a53af",
+        "type": "change",
+        "z": "855d2da34cd02ed6",
+        "name": "to_text",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.status",
+                "tot": "msg"
+            }
+        ],
+        "x": 720,
+        "y": 120,
+        "wires": [
+            [
+                "f62728a9d8ee4304"
+            ]
+        ]
+    },
+    {
+        "id": "f62728a9d8ee4304",
+        "type": "ui_text",
+        "z": "855d2da34cd02ed6",
+        "group": "a70d4d070de024c4",
+        "order": 1,
+        "width": 12,
+        "height": 1,
+        "name": "status_display",
+        "label": "Status",
+        "format": "{{msg.payload}}",
+        "x": 910,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "d886e24d47a137bc",
+        "type": "function",
+        "z": "855d2da34cd02ed6",
+        "name": "temp_humidity",
+        "func": "let data = msg.payload || {};\nlet temp = (data.temp == null || isNaN(data.temp)) ? undefined : Number(data.temp);\nlet humidity = (data.humidity == null || isNaN(data.humidity)) ? undefined : Number(data.humidity);\nreturn [{payload: temp}, {payload: humidity}];",
+        "outputs": 2,
+        "noerr": 0,
+        "x": 700,
+        "y": 220,
+        "wires": [
+            [
+                "d135118ef2f25530"
+            ],
+            [
+                "403de249f25a25c0"
+            ]
+        ]
+    },
+    {
+        "id": "d135118ef2f25530",
+        "type": "ui_gauge",
+        "z": "855d2da34cd02ed6",
+        "name": "temperature",
+        "group": "6652f95f26abc7e6",
+        "order": 1,
+        "width": 6,
+        "height": 3,
+        "gtype": "gage",
+        "title": "Temperature (C)",
+        "label": "C",
+        "format": "{{value}}",
+        "min": "0",
+        "max": "50",
+        "x": 910,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "403de249f25a25c0",
+        "type": "ui_gauge",
+        "z": "855d2da34cd02ed6",
+        "name": "humidity",
+        "group": "6652f95f26abc7e6",
+        "order": 2,
+        "width": 6,
+        "height": 3,
+        "gtype": "gage",
+        "title": "Humidity (%)",
+        "label": "%",
+        "format": "{{value}}",
+        "min": "0",
+        "max": "100",
+        "x": 910,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "80cf827d1e2a6cf0",
+        "type": "function",
+        "z": "855d2da34cd02ed6",
+        "name": "light_magnet",
+        "func": "let data = msg.payload || {};\nlet light = (data.light == null || isNaN(data.light)) ? undefined : Number(data.light);\nlet magnet = data.magnet === 1 ? \"Closed\" : \"Open\";\nreturn [{payload: light}, {payload: magnet}];",
+        "outputs": 2,
+        "noerr": 0,
+        "x": 700,
+        "y": 300,
+        "wires": [
+            [
+                "56206746f66b402d"
+            ],
+            [
+                "65fb6e8a536d8338"
+            ]
+        ]
+    },
+    {
+        "id": "56206746f66b402d",
+        "type": "ui_gauge",
+        "z": "855d2da34cd02ed6",
+        "name": "light",
+        "group": "6652f95f26abc7e6",
+        "order": 3,
+        "width": 6,
+        "height": 3,
+        "gtype": "gage",
+        "title": "Light (lux)",
+        "label": "lux",
+        "format": "{{value}}",
+        "min": "0",
+        "max": "10000",
+        "x": 910,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "65fb6e8a536d8338",
+        "type": "ui_text",
+        "z": "855d2da34cd02ed6",
+        "group": "a70d4d070de024c4",
+        "order": 2,
+        "width": 12,
+        "height": 1,
+        "name": "magnet_status",
+        "label": "Magnet",
+        "format": "{{msg.payload}}",
+        "x": 910,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "6a17a16fe8e3d8c7",
+        "type": "function",
+        "z": "855d2da34cd02ed6",
+        "name": "pressure_distance",
+        "func": "let data = msg.payload || {};\nfunction to_number(value) { return (value == null || isNaN(Number(value))) ? undefined : Number(value); }\nlet pressure = to_number(data.pressure);\nlet distance = to_number(data.distance);\nreturn [{ payload: pressure }, { payload: distance }];",
+        "outputs": 2,
+        "noerr": 0,
+        "x": 700,
+        "y": 380,
+        "wires": [
+            [
+                "7b18b767b05ee9f3"
+            ],
+            [
+                "b33f23dc7a88c053"
+            ]
+        ]
+    },
+    {
+        "id": "7b18b767b05ee9f3",
+        "type": "ui_gauge",
+        "z": "855d2da34cd02ed6",
+        "name": "pressure",
+        "group": "6652f95f26abc7e6",
+        "order": 4,
+        "width": 6,
+        "height": 3,
+        "gtype": "gage",
+        "title": "Pressure (hPa)",
+        "label": "hPa",
+        "format": "{{value}}",
+        "min": "800",
+        "max": "1100",
+        "x": 910,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "b33f23dc7a88c053",
+        "type": "ui_gauge",
+        "z": "855d2da34cd02ed6",
+        "name": "distance",
+        "group": "6652f95f26abc7e6",
+        "order": 5,
+        "width": 6,
+        "height": 3,
+        "gtype": "gage",
+        "title": "Distance (mm)",
+        "label": "mm",
+        "format": "{{value}}",
+        "min": "0",
+        "max": "2000",
+        "x": 910,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "6685d9d52db715a6",
+        "type": "ui_switch",
+        "z": "855d2da34cd02ed6",
+        "name": "heater_control",
+        "label": "Heater",
+        "group": "2b36c7d8c9c502d6",
+        "order": 1,
+        "width": 6,
+        "height": 1,
+        "passthru": false,
+        "decouple": false,
+        "topic": "heater",
+        "style": "",
+        "onvalue": "heater=1",
+        "onvalueType": "str",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "heater=0",
+        "offvalueType": "str",
+        "officon": "",
+        "offcolor": "",
+        "animate": true,
+        "x": 160,
+        "y": 460,
+        "wires": [
+            [
+                "339e38d23830de45"
+            ]
+        ]
+    },
+    {
+        "id": "44a521021d3facbd",
+        "type": "ui_switch",
+        "z": "855d2da34cd02ed6",
+        "name": "cooler_control",
+        "label": "Cooler",
+        "group": "2b36c7d8c9c502d6",
+        "order": 2,
+        "width": 6,
+        "height": 1,
+        "passthru": false,
+        "decouple": false,
+        "topic": "cooler",
+        "style": "",
+        "onvalue": "cooler=1",
+        "onvalueType": "str",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "cooler=0",
+        "offvalueType": "str",
+        "officon": "",
+        "offcolor": "",
+        "animate": true,
+        "x": 160,
+        "y": 500,
+        "wires": [
+            [
+                "339e38d23830de45"
+            ]
+        ]
+    },
+    {
+        "id": "ff341dd80146bab1",
+        "type": "ui_switch",
+        "z": "855d2da34cd02ed6",
+        "name": "flood_control",
+        "label": "Flood",
+        "group": "2b36c7d8c9c502d6",
+        "order": 3,
+        "width": 6,
+        "height": 1,
+        "passthru": false,
+        "decouple": false,
+        "topic": "flood",
+        "style": "",
+        "onvalue": "flood=1",
+        "onvalueType": "str",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "flood=0",
+        "offvalueType": "str",
+        "officon": "",
+        "offcolor": "",
+        "animate": true,
+        "x": 160,
+        "y": 540,
+        "wires": [
+            [
+                "339e38d23830de45"
+            ]
+        ]
+    },
+    {
+        "id": "15c9b5f03ac4bcfe",
+        "type": "ui_switch",
+        "z": "855d2da34cd02ed6",
+        "name": "window_control",
+        "label": "Window",
+        "group": "2b36c7d8c9c502d6",
+        "order": 4,
+        "width": 6,
+        "height": 1,
+        "passthru": false,
+        "decouple": false,
+        "topic": "window",
+        "style": "",
+        "onvalue": "window=1",
+        "onvalueType": "str",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "window=0",
+        "offvalueType": "str",
+        "officon": "",
+        "offcolor": "",
+        "animate": true,
+        "x": 160,
+        "y": 580,
+        "wires": [
+            [
+                "339e38d23830de45"
+            ]
+        ]
+    },
+    {
+        "id": "768350bff84c984e",
+        "type": "ui_switch",
+        "z": "855d2da34cd02ed6",
+        "name": "alarm_control",
+        "label": "Alarm",
+        "group": "2b36c7d8c9c502d6",
+        "order": 5,
+        "width": 6,
+        "height": 1,
+        "passthru": false,
+        "decouple": false,
+        "topic": "alarm",
+        "style": "",
+        "onvalue": "alarm=1",
+        "onvalueType": "str",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "alarm=0",
+        "offvalueType": "str",
+        "officon": "",
+        "offcolor": "",
+        "animate": true,
+        "x": 160,
+        "y": 620,
+        "wires": [
+            [
+                "339e38d23830de45"
+            ]
+        ]
+    },
+    {
+        "id": "d94b0a03fceccf11",
+        "type": "ui_switch",
+        "z": "855d2da34cd02ed6",
+        "name": "mode_control",
+        "label": "AI Mode",
+        "group": "2b36c7d8c9c502d6",
+        "order": 6,
+        "width": 6,
+        "height": 1,
+        "passthru": false,
+        "decouple": false,
+        "topic": "mode",
+        "style": "",
+        "onvalue": "mode=ai",
+        "onvalueType": "str",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "mode=rule",
+        "offvalueType": "str",
+        "officon": "",
+        "offcolor": "",
+        "animate": true,
+        "x": 160,
+        "y": 660,
+        "wires": [
+            [
+                "339e38d23830de45"
+            ]
+        ]
+    },
+    {
+        "id": "339e38d23830de45",
+        "type": "mqtt out",
+        "z": "855d2da34cd02ed6",
+        "name": "publish_control",
+        "topic": "iot/cmd/act",
+        "qos": "0",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "mqtt_broker",
+        "x": 360,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "1fd3f758747ca043",
+        "type": "mqtt out",
+        "z": "855d2da34cd02ed6",
+        "name": "send_to_model",
+        "topic": "iot/model/input",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "mqtt_broker",
+        "x": 750,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "bdb3f4272da4e960",
+        "type": "mqtt in",
+        "z": "855d2da34cd02ed6",
+        "name": "subscribe_predictions",
+        "topic": "iot/model/predictions",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "mqtt_broker",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 160,
+        "y": 740,
+        "wires": [
+            [
+                "7f7e57dfaa9bae76"
+            ]
+        ]
+    },
+    {
+        "id": "7f7e57dfaa9bae76",
+        "type": "function",
+        "z": "855d2da34cd02ed6",
+        "name": "update_switches (AI)",
+        "func": "let message = msg.payload;\nif (typeof message !== 'string') return null;\n\nlet output = null;\n\nif (message.startsWith('heater=')) {\n  output = { payload: message.endsWith('1') ? 'heater=1' : 'heater=0', topic: 'heater' };\n} else if (message.startsWith('cooler=')) {\n  output = { payload: message.endsWith('1') ? 'cooler=1' : 'cooler=0', topic: 'cooler' };\n} else if (message.startsWith('flood=')) {\n  output = { payload: message.endsWith('1') ? 'flood=1' : 'flood=0', topic: 'flood' };\n} else if (message.startsWith('window=')) {\n  output = { payload: message.endsWith('1') ? 'window=1' : 'window=0', topic: 'window' };\n}\n\nif (output) {\n    return output;\n}\n\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 390,
+        "y": 740,
+        "wires": [
+            [
+                "eb67317ec2ee72ea"
+            ]
+        ]
+    },
+    {
+        "id": "eb67317ec2ee72ea",
+        "type": "switch",
+        "z": "855d2da34cd02ed6",
+        "name": "route_control",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "heater",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "cooler",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "flood",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "window",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "alarm",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "mode",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 6,
+        "x": 620,
+        "y": 540,
+        "wires": [
+            [
+                "6685d9d52db715a6"
+            ],
+            [
+                "44a521021d3facbd"
+            ],
+            [
+                "ff341dd80146bab1"
+            ],
+            [
+                "15c9b5f03ac4bcfe"
+            ],
+            [
+                "768350bff84c984e"
+            ],
+            [
+                "d94b0a03fceccf11"
+            ]
+        ]
+    },
+    {
+        "id": "mqtt_broker",
+        "type": "mqtt-broker",
+        "name": "HiveMQ Broker",
+        "broker": "broker.hivemq.com",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "a70d4d070de024c4",
+        "type": "ui_group",
+        "name": "Status",
+        "tab": "0d429a37c81569d4",
+        "order": 1,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "6652f95f26abc7e6",
+        "type": "ui_group",
+        "name": "Sensors",
+        "tab": "0d429a37c81569d4",
+        "order": 2,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "2b36c7d8c9c502d6",
+        "type": "ui_group",
+        "name": "Controls",
+        "tab": "0d429a37c81569d4",
+        "order": 3,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "0d429a37c81569d4",
+        "type": "ui_tab",
+        "name": "ESP32 Control",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "26d59d49fe237be8",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard": "3.6.6"
+        }
+    }
 ]
