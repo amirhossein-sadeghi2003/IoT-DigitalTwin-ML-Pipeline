@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual env
+.venv/
+
+# VS Code
+.vscode/
+**/.vscode/
+
+# ML artifacts (generated)
+*.pkl
+*.keras
+scaler.pkl
+
+# OS junk
+.DS_Store
+Thumbs.db
