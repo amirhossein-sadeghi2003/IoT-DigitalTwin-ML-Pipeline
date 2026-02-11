@@ -18,3 +18,4 @@ scaler.pkl
 .DS_Store
 Thumbs.db
 esp32_code/config.h
+esp32_code/**/config.h

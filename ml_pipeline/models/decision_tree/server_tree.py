@@ -12,7 +12,7 @@ except FileNotFoundError:
     print("Error: 'decision_tree_model.pkl' not found.")
     raise SystemExit
 
-broker = "broker.hivemq.com"
+broker = "localhost"
 port = 1883
 topic_input = "iot/model/input"
 topic_output = "iot/model/predictions"

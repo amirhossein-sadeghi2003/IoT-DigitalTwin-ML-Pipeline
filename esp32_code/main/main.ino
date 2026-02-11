@@ -8,6 +8,8 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_NeoPixel.h>
+#include "config.h"
+
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -18,13 +20,16 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
-const char* wifi_ssid = "02F1G_9979c0";
-const char* wifi_pass = "wlan66863f";
-const char* mqtt_server = "broker.hivemq.com";
-const uint16_t mqtt_port = 1883;
-const char* mqtt_topic_sensors = "iot/test/sensors";
-const char* mqtt_topic_control = "iot/cmd/act";
-const char* mqtt_topic_predictions = "iot/model/predictions"; 
+const char* wifi_ssid = WIFI_SSID;
+const char* wifi_pass = WIFI_PASSWORD;
+
+const char* mqtt_server = MQTT_SERVER;
+const uint16_t mqtt_port = MQTT_PORT;
+
+const char* mqtt_topic_sensors = TOPIC_SENSORS;
+const char* mqtt_topic_control = TOPIC_CONTROL;
+const char* mqtt_topic_predictions = TOPIC_PREDICTIONS;
+
 
 WiFiClient wifi_client;
 PubSubClient mqtt_client(wifi_client);
