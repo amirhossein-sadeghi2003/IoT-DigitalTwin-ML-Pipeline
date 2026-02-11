@@ -17,3 +17,4 @@ scaler.pkl
 # OS junk
 .DS_Store
 Thumbs.db
+esp32_code/config.h

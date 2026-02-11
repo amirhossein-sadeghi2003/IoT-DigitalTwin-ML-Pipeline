@@ -1,0 +1,15 @@
+#pragma once
+
+// WiFi (DO NOT COMMIT real passwords; copy to config.h locally)
+#define WIFI_SSID "YOUR_WIFI_SSID"
+#define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
+
+// MQTT (public broker for now)
+#define MQTT_SERVER "broker.hivemq.com"
+#define MQTT_PORT 1883
+
+// Topics
+#define TOPIC_SENSORS     "iot/test/sensors"
+#define TOPIC_CONTROL     "iot/cmd/act"
+#define TOPIC_MODEL_INPUT "iot/model/input"
+#define TOPIC_PREDICTIONS "iot/model/predictions"
