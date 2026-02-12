@@ -38,7 +38,8 @@
         "y": 120,
         "wires": [
             [
-                "346776c2eb117e51"
+                "346776c2eb117e51",
+                "3086ab82f818b732"
             ]
         ]
     },
@@ -201,7 +202,16 @@
         "label": "lux",
         "format": "{{value}}",
         "min": "0",
-        "max": "10000",
+        "max": "1000",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
         "x": 910,
         "y": 300,
         "wires": []
@@ -273,7 +283,16 @@
         "label": "mm",
         "format": "{{value}}",
         "min": "0",
-        "max": "2000",
+        "max": "500",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
         "x": 910,
         "y": 420,
         "wires": []
@@ -439,6 +458,7 @@
         "z": "855d2da34cd02ed6",
         "name": "mode_control",
         "label": "AI Mode",
+        "tooltip": "",
         "group": "2b36c7d8c9c502d6",
         "order": 6,
         "width": 6,
@@ -446,6 +466,7 @@
         "passthru": false,
         "decouple": false,
         "topic": "mode",
+        "topicType": "str",
         "style": "",
         "onvalue": "mode=ai",
         "onvalueType": "str",
@@ -456,11 +477,13 @@
         "officon": "",
         "offcolor": "",
         "animate": true,
+        "className": "",
         "x": 160,
         "y": 660,
         "wires": [
             [
-                "339e38d23830de45"
+                "339e38d23830de45",
+                "c814560bba75fbdb"
             ]
         ]
     },
@@ -513,8 +536,8 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 160,
-        "y": 740,
+        "x": 460,
+        "y": 680,
         "wires": [
             [
                 "7f7e57dfaa9bae76"
@@ -526,14 +549,21 @@
         "type": "function",
         "z": "855d2da34cd02ed6",
         "name": "update_switches (AI)",
-        "func": "let message = msg.payload;\nif (typeof message !== 'string') return null;\n\nlet output = null;\n\nif (message.startsWith('heater=')) {\n  output = { payload: message.endsWith('1') ? 'heater=1' : 'heater=0', topic: 'heater' };\n} else if (message.startsWith('cooler=')) {\n  output = { payload: message.endsWith('1') ? 'cooler=1' : 'cooler=0', topic: 'cooler' };\n} else if (message.startsWith('flood=')) {\n  output = { payload: message.endsWith('1') ? 'flood=1' : 'flood=0', topic: 'flood' };\n} else if (message.startsWith('window=')) {\n  output = { payload: message.endsWith('1') ? 'window=1' : 'window=0', topic: 'window' };\n}\n\nif (output) {\n    return output;\n}\n\nreturn null;",
-        "outputs": 1,
+        "func": "let message = msg.payload;\nif (typeof message !== 'string') return [null, null];\n\nlet controlMsg = null;\nlet statusMsg = null;\n\nfunction make(outName) {\n  const isOn = message.trim().endsWith('=1');\n  controlMsg = { payload: `${outName}=${isOn ? 1 : 0}` };\n  statusMsg = { topic: outName, payload: isOn ? 1 : 0 };\n}\n\nif (message.startsWith('heater=')) make('heater');\nelse if (message.startsWith('cooler=')) make('cooler');\nelse if (message.startsWith('flood=')) make('flood');\nelse if (message.startsWith('window=')) make('window');\nelse return [null, null];\n\nreturn [controlMsg, statusMsg];\n",
+        "outputs": 2,
+        "timeout": "",
         "noerr": 0,
-        "x": 390,
-        "y": 740,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 720,
         "wires": [
             [
                 "eb67317ec2ee72ea"
+            ],
+            [
+                "4ddb6b9d98ae4370"
             ]
         ]
     },
@@ -603,25 +633,258 @@
         ]
     },
     {
+        "id": "1af25f8293e203ca",
+        "type": "ui_text",
+        "z": "855d2da34cd02ed6",
+        "group": "734eba330a0c3419",
+        "order": 7,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Cooler status",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1310,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "a238711d5ab8c8a7",
+        "type": "ui_text",
+        "z": "855d2da34cd02ed6",
+        "group": "734eba330a0c3419",
+        "order": 6,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Heater status",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1250,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "de04b6db18a74c1d",
+        "type": "ui_text",
+        "z": "855d2da34cd02ed6",
+        "group": "734eba330a0c3419",
+        "order": 8,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Flood status",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1290,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "4208ea60a975676a",
+        "type": "ui_text",
+        "z": "855d2da34cd02ed6",
+        "group": "734eba330a0c3419",
+        "order": 9,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Window status",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1240,
+        "y": 920,
+        "wires": []
+    },
+    {
+        "id": "5c7dd113c1a9a499",
+        "type": "switch",
+        "z": "855d2da34cd02ed6",
+        "name": "",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "heater",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "cooler",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "flood",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "window",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 4,
+        "x": 1090,
+        "y": 720,
+        "wires": [
+            [
+                "a238711d5ab8c8a7"
+            ],
+            [
+                "1af25f8293e203ca"
+            ],
+            [
+                "de04b6db18a74c1d"
+            ],
+            [
+                "4208ea60a975676a"
+            ]
+        ]
+    },
+    {
+        "id": "4ddb6b9d98ae4370",
+        "type": "function",
+        "z": "855d2da34cd02ed6",
+        "name": "to_on_off",
+        "func": "msg.payload = (Number(msg.payload) === 1) ? \"ON\" : \"OFF\";\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 940,
+        "y": 720,
+        "wires": [
+            [
+                "5c7dd113c1a9a499"
+            ]
+        ]
+    },
+    {
+        "id": "07a9986bbec6ba90",
+        "type": "ui_ui_control",
+        "z": "855d2da34cd02ed6",
+        "name": "ui_control",
+        "events": "all",
+        "x": 700,
+        "y": 940,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "c814560bba75fbdb",
+        "type": "function",
+        "z": "855d2da34cd02ed6",
+        "name": "toggle AI predictions group",
+        "func": "const GROUP_ID = \"ESP32_Control_AI_predictions\";\nconst p = String(msg.payload || \"\");\n\nmsg.payload = {\n    group: { \n        show: (p == \"mode=ai\") ? [GROUP_ID] : [],\n        hide: (p == \"mode=ai\") ? [] : [GROUP_ID]\n    }\n};\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 440,
+        "y": 780,
+        "wires": [
+            [
+                "07a9986bbec6ba90"
+            ]
+        ]
+    },
+    {
+        "id": "3086ab82f818b732",
+        "type": "function",
+        "z": "855d2da34cd02ed6",
+        "name": "build_alarm_text",
+        "func": "let p = msg.payload;\nif (!p || typeof p !== \"object\") return null;\n\nlet alarmEnabled = Number(p.alarm || 0);\nlet d = p.distance; \nif (d === null || d === undefined) {\n    msg.payload = \"No object\";\n    return msg;\n}\n\nlet distance = Number(d);\nif (!Number.isFinite(distance)) {\n    msg.payload = \"No object\";\n    return msg;\n}\n\nif (alarmEnabled === 1 && distance < 200) {\n    msg.payload = `Alarm! Object detected: ${distance} mm`;\n} else {\n    msg.payload = `Object: ${distance} mm`;\n}\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 40,
+        "wires": [
+            [
+                "5de96489ee933dd3"
+            ]
+        ]
+    },
+    {
+        "id": "5de96489ee933dd3",
+        "type": "ui_text",
+        "z": "855d2da34cd02ed6",
+        "group": "a70d4d070de024c4",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Alarm",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 810,
+        "y": 40,
+        "wires": []
+    },
+    {
         "id": "mqtt_broker",
         "type": "mqtt-broker",
-        "name": "HiveMQ Broker",
-        "broker": "broker.hivemq.com",
+        "name": "my_laptop",
+        "broker": " localhost",
         "port": "1883",
         "clientid": "",
+        "autoConnect": true,
         "usetls": false,
         "protocolVersion": "4",
         "keepalive": "60",
         "cleansession": true,
+        "autoUnsubscribe": true,
         "birthTopic": "",
         "birthQos": "0",
         "birthPayload": "",
+        "birthMsg": {},
         "closeTopic": "",
         "closeQos": "0",
         "closePayload": "",
+        "closeMsg": {},
         "willTopic": "",
         "willQos": "0",
-        "willPayload": ""
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
     },
     {
         "id": "a70d4d070de024c4",
@@ -651,7 +914,19 @@
         "order": 3,
         "disp": true,
         "width": "12",
-        "collapse": false
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "734eba330a0c3419",
+        "type": "ui_group",
+        "name": "AI predictions",
+        "tab": "0d429a37c81569d4",
+        "order": 4,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
     },
     {
         "id": "0d429a37c81569d4",
@@ -662,7 +937,7 @@
         "hidden": false
     },
     {
-        "id": "26d59d49fe237be8",
+        "id": "83388a2131af8718",
         "type": "global-config",
         "env": [],
         "modules": {
