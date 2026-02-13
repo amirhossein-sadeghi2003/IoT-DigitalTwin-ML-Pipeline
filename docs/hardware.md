@@ -2,21 +2,25 @@
 
 ## Parts
 - ESP32 DevKit
-- (Sensor) Temperature
-- (Sensor) Light (LDR)
 - (Sensor) Magnetic reed switch (door/window)
-- (Optional) LEDs / relays for outputs (heater/cooler/flood/window indicators)
+- (Optional) LED indicator
+- (Optional) Buzzer
+- (Sensor) Temperature (TBD from code)
+- (Sensor) Light / LDR (TBD from code)
 - Jumper wires + breadboard
 
+## GPIO mapping (from `esp32_code/main/main.ino`)
+- **LED** → GPIO **5** (`LED_PIN`)
+- **Buzzer** → GPIO **23** (`BUZZER_PIN`)
+- **Reed switch (magnet/door)** → GPIO **18** (`magnet_pin`)
+  - Config: `INPUT_PULLUP`
+  - Wiring: one side to **GND**, the other side to **GPIO18**
+  - Logic in code: `LOW` means **magnet = 1**
+
 ## Wiring (high level)
-> Update the GPIO numbers based on your actual wiring / code.
+- Keep **all grounds common (GND)**.
+- If you use relays (heater/cooler/etc), use proper driver/transistor + separate power.
 
-- **Temperature sensor** → ESP32 GPIO: ___
-- **LDR (light)** → ESP32 ADC GPIO: ___
-- **Reed switch (magnet)** → ESP32 GPIO: ___ (use pull-up/down as needed)
-- **Alarm input (if any)** → ESP32 GPIO: ___
-
-## Notes
-- Ensure all grounds are common (GND).
-- If using relays, use proper drivers and power isolation.
-- Keep MQTT broker settings in `esp32_code/config.h` (ignored by git).
+## TODO (to fill once confirmed from code)
+- Temperature sensor GPIO: ___
+- LDR/Light ADC GPIO: ___
