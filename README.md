@@ -21,3 +21,10 @@ ESP32 firmware: `esp32_code/main/main.ino`
 ## Docs
 - Node-RED: node_red_dashboard/README.md
 - MQTT examples: docs/mqtt_examples.md
+
+## Screenshots
+### Dashboard
+![Node-RED Dashboard](docs/images/dashboard.png)
+
+### Hardware / Circuit
+![Circuit](docs/images/circuit.jpeg)
