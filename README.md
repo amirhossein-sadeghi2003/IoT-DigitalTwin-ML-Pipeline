@@ -28,3 +28,5 @@ ESP32 firmware: `esp32_code/main/main.ino`
 
 ### Hardware / Circuit
 ![Circuit](docs/images/circuit.jpeg)
+
+- Hardware/Wiring: docs/hardware.md
