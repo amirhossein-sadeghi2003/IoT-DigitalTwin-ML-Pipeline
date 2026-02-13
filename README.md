@@ -30,3 +30,6 @@ ESP32 firmware: `esp32_code/main/main.ino`
 ![Circuit](docs/images/circuit.jpeg)
 
 - Hardware/Wiring: docs/hardware.md
+
+## Hardware note
+Sensors: BME280 (temp/humidity/pressure) + BH1750 (light) over I2C. ESP32 default I2C pins: SDA=21, SCL=22.
