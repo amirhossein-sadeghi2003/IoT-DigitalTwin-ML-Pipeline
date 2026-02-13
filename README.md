@@ -17,3 +17,7 @@ python ml_pipeline/models/decision_tree/server_tree.py
 
 Node-RED: import `node_red_dashboard/flow.json` and open the dashboard.
 ESP32 firmware: `esp32_code/main/main.ino`
+
+## Docs
+- Node-RED: node_red_dashboard/README.md
+- MQTT examples: docs/mqtt_examples.md
