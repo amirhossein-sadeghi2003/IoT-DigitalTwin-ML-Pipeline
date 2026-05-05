@@ -19,3 +19,8 @@ scaler.pkl
 Thumbs.db
 esp32_code/config.h
 esp32_code/**/config.h
+
+# Report-only generated diagrams/scripts
+docs/images/decision_tree_*.png
+docs/images/mlp_arch.png
+ml_pipeline/scripts/
