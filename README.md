@@ -1,117 +1,326 @@
 # IoT Digital Twin ML Pipeline
 
-This project is an IoT-based digital twin system that combines embedded sensing, MQTT communication, machine learning inference, and a Node-RED dashboard for monitoring and control.
+IoT-based digital twin pipeline combining ESP32 sensing, MQTT communication, machine learning inference, and a Node-RED dashboard for monitoring and decision support.
 
-## Overview
+This project demonstrates an end-to-end prototype that connects:
 
-The system is built around an ESP32-based sensing unit that collects environmental data and sends it through MQTT. The received data is then processed by machine learning models, and the predictions are visualized in a Node-RED dashboard.
+- embedded sensing
+- IoT communication
+- MQTT messaging
+- machine learning inference
+- dashboard-based visualization
+- digital twin style monitoring
 
-The full pipeline is:
+The full system pipeline is:
 
-`ESP32 -> MQTT (Mosquitto) -> ML Inference -> Node-RED Dashboard`
+```text
+ESP32 sensors → MQTT broker → ML inference layer → Node-RED dashboard
+```
+
+---
+
+## Project Overview
+
+The system is built around an ESP32-based sensing unit that collects environmental data from physical sensors and sends the readings through MQTT.
+
+The received data can then be processed by machine learning models, and the resulting predictions are visualized in a Node-RED dashboard.
+
+This project is designed as a practical IoT / embedded AI pipeline for environmental monitoring and decision support.
+
+---
+
+## Why This Project Matters
+
+This project connects several important parts of an intelligent cyber-physical system:
+
+- sensor data collection from real hardware
+- communication between embedded devices and software services
+- MQTT-based message passing
+- model-based prediction
+- dashboard visualization
+- digital twin style monitoring
+
+It complements my other projects in TinyML, dynamic systems, Kalman filtering, and sensor-based classification by showing a broader IoT system architecture.
+
+---
+
+## System Architecture
+
+The system consists of four main layers:
+
+```text
+ESP32 Sensing Layer
+        ↓
+MQTT Communication Layer
+        ↓
+Machine Learning Layer
+        ↓
+Node-RED Dashboard Layer
+```
+
+---
 
 ## Main Components
 
 ### 1. ESP32 Sensing Layer
 
-The ESP32 collects real-world sensor data from:
+The ESP32 collects real-world environmental data from:
 
-- BME280 for temperature, humidity, and pressure
-- BH1750 for ambient light
+- BME280 temperature, humidity, and pressure sensor
+- BH1750 ambient light sensor
 
-These sensors communicate over I2C.
+The sensors communicate with the ESP32 over I2C.
+
+Default ESP32 I2C pins:
+
+```text
+SDA: GPIO 21
+SCL: GPIO 22
+```
+
+The ESP32 firmware is located in:
+
+```text
+esp32_code/main/main.ino
+```
+
+---
 
 ### 2. MQTT Communication Layer
 
-The sensor data is transmitted using MQTT.
-
-Main topics:
-
-- input topic: `iot/model/input`
-- output topic: `iot/model/predictions`
+Sensor data is transmitted using MQTT.
 
 Default broker:
 
-- `localhost:1883`
+```text
+localhost:1883
+```
+
+Main MQTT topics:
+
+| Topic | Purpose |
+|---|---|
+| `iot/model/input` | Input data sent to the model layer |
+| `iot/model/predictions` | Model prediction output |
+| `iot/test/sensors` | Sensor data stream |
+| `iot/cmd/act` | Control or actuator command topic |
+
+MQTT examples are documented in:
+
+```text
+docs/mqtt_examples.md
+```
+
+---
 
 ### 3. Machine Learning Layer
 
-The project includes machine learning models for prediction and intelligent system behavior.
+The machine learning pipeline is located in:
 
-The ML pipeline is located in the `ml_pipeline` folder and supports different model types such as decision trees and neural networks.
+```text
+ml_pipeline/
+```
 
-### 4. Visualization Layer
+The project includes trained model artifacts and pipeline documentation for intelligent prediction behavior.
 
-The system uses Node-RED to visualize the incoming data and model predictions in a dashboard interface.
+The ML layer supports model-based decision making using approaches such as:
 
-The dashboard flow file is included in:
+- decision tree models
+- neural network models
+- preprocessing / scaling pipeline
 
-`node_red_dashboard/flow.json`
+Important files include:
+
+```text
+ml_pipeline/README.md
+ml_pipeline/requirements.txt
+ml_pipeline/models/
+```
+
+---
+
+### 4. Node-RED Dashboard Layer
+
+The system uses Node-RED to visualize incoming data and prediction outputs.
+
+The dashboard flow is included in:
+
+```text
+node_red_dashboard/flow.json
+```
+
+Dashboard setup documentation is available in:
+
+```text
+node_red_dashboard/README.md
+```
+
+---
+
+## Dashboard and Hardware Screenshots
+
+### Node-RED Dashboard
+
+The dashboard visualizes the IoT data stream and model outputs.
+
+![Node-RED Dashboard](docs/images/dashboard.png)
+
+### Hardware and Circuit
+
+The hardware setup connects the ESP32 with environmental sensors for real-world data collection.
+
+![Hardware Circuit](docs/images/circuit.jpeg)
+
+---
 
 ## Repository Structure
 
-Main parts of the repository:
+```text
+IoT-DigitalTwin-ML-Pipeline/
+├── docs/
+│   ├── hardware.md
+│   ├── mqtt_examples.md
+│   ├── presentation.pdf
+│   └── images/
+│       ├── dashboard.png
+│       └── circuit.jpeg
+├── esp32_code/
+│   ├── config.h.template
+│   ├── README.md
+│   └── main/
+│       └── main.ino
+├── ml_pipeline/
+│   ├── README.md
+│   ├── requirements.txt
+│   └── models/
+├── node_red_dashboard/
+│   ├── flow.json
+│   └── README.md
+├── LICENSE
+└── README.md
+```
 
-- `esp32_code/` for ESP32 firmware
-- `ml_pipeline/` for model training and inference
-- `node_red_dashboard/` for Node-RED flow and dashboard setup
-- `docs/` for documentation, images, and presentation
-
-## Quick Start
-
-To run the ML environment:
-
-- create and activate a virtual environment
-- install the required packages from `ml_pipeline/requirements.txt`
-- run one of the model servers
-
-The ESP32 firmware entry point is:
-
-`esp32_code/main/main.ino`
-
-The Node-RED dashboard flow is:
-
-`node_red_dashboard/flow.json`
+---
 
 ## Documentation
 
 Additional documentation is available in:
 
-- `docs/hardware.md`
-- `docs/mqtt_examples.md`
-- `node_red_dashboard/README.md`
+| Document | Description |
+|---|---|
+| [`docs/hardware.md`](docs/hardware.md) | Hardware setup and sensor information |
+| [`docs/mqtt_examples.md`](docs/mqtt_examples.md) | MQTT topic examples and message format |
+| [`esp32_code/README.md`](esp32_code/README.md) | ESP32 firmware notes |
+| [`ml_pipeline/README.md`](ml_pipeline/README.md) | Machine learning pipeline notes |
+| [`node_red_dashboard/README.md`](node_red_dashboard/README.md) | Node-RED dashboard setup |
+| [`docs/presentation.pdf`](docs/presentation.pdf) | Project presentation |
 
-## Screenshots
+---
 
-### Dashboard
+## Quick Start
 
-The dashboard interface is shown in:
+### 1. ESP32 Firmware
 
-`docs/images/dashboard.png`
+The ESP32 firmware entry point is:
 
-### Hardware and Circuit
+```text
+esp32_code/main/main.ino
+```
 
-The hardware setup is shown in:
+Before uploading the firmware, create a local configuration file from the template:
 
-`docs/images/circuit.jpeg`
+```text
+esp32_code/config.h.template
+```
 
-## Project Presentation
+Do not commit real WiFi credentials.
 
-The English project presentation is available here:
+---
 
-`docs/presentation.pdf`
+### 2. ML Environment
 
-## Hardware Note
+Go to the ML pipeline folder:
 
-Sensors used in this project:
+```bash
+cd ml_pipeline
+```
 
-- BME280
-- BH1750
+Create and activate a virtual environment:
 
-ESP32 default I2C pins:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
 
-- SDA = 21
-- SCL = 22
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Then run the relevant model or inference scripts described in:
+
+```text
+ml_pipeline/README.md
+```
+
+---
+
+### 3. Node-RED Dashboard
+
+Import the Node-RED flow from:
+
+```text
+node_red_dashboard/flow.json
+```
+
+Dashboard details are documented in:
+
+```text
+node_red_dashboard/README.md
+```
+
+---
+
+## Configuration and Security Note
+
+Real WiFi credentials and local network settings should not be committed to Git.
+
+This repository includes:
+
+```text
+esp32_code/config.h.template
+```
+
+Local configuration files such as the following are ignored by Git:
+
+```text
+esp32_code/config.h
+esp32_code/main/config.h
+```
+
+This keeps private WiFi credentials and local broker IP addresses out of the public repository.
+
+---
+
+## Project Role in Portfolio
+
+This project represents the IoT and digital twin side of my portfolio.
+
+It complements other projects focused on:
+
+- embedded TinyML condition monitoring
+- Kalman filtering for dynamic systems
+- machine learning classification of simulated physical systems
+- graph mining and node classification
+
+Together, these projects support a broader direction:
+
+```text
+AI / ML for intelligent physical and sensor-based systems
+```
+
+---
 
 ## Project Goal
 
@@ -120,7 +329,25 @@ The main goal of this project is to create an intelligent digital twin pipeline 
 - embedded systems
 - IoT communication
 - machine learning
+- MQTT-based data exchange
 - dashboard-based visualization
+
+---
+
+## Limitations
+
+This project is a prototype and has several limitations:
+
+- the system is designed for local network testing
+- deployment structure can be improved
+- model serving can be made more robust
+- logging and evaluation can be expanded
+- dashboard control features are still basic
+- cloud deployment is not included in the current version
+
+These limitations leave clear room for future extensions.
+
+---
 
 ## Future Improvements
 
@@ -128,6 +355,16 @@ Possible next steps:
 
 - improve deployment structure
 - add more robust model serving
-- connect the system to real-time cloud infrastructure
 - improve model evaluation and logging
-- extend the dashboard for richer control features
+- extend the dashboard with richer control features
+- connect the system to cloud infrastructure
+- add more sensors and actuator feedback
+- improve reproducibility of the ML pipeline
+
+---
+
+## Summary
+
+This project demonstrates a practical IoT digital twin pipeline that connects real embedded sensing with MQTT communication, machine learning inference, and dashboard visualization.
+
+It is a portfolio-oriented example of how embedded devices, ML systems, and monitoring dashboards can work together in an intelligent cyber-physical system.
