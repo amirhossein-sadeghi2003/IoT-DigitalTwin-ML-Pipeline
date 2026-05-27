@@ -49,14 +49,16 @@ It complements my other projects in TinyML, dynamic systems, Kalman filtering, a
 The system consists of four main layers:
 
 ```text
-ESP32 Sensing Layer
+ESP32 Sensing and State Layer
         ↓
 MQTT Communication Layer
         ↓
-Machine Learning Layer
+Machine Learning / Decision Layer
         ↓
-Node-RED Dashboard Layer
+Node-RED Digital Twin Dashboard Layer
 ```
+
+In the current prototype, the sensing layer includes both environmental measurements and simple physical-state inputs, including distance and magnetic door/window status.
 
 ---
 
@@ -64,12 +66,14 @@ Node-RED Dashboard Layer
 
 ### 1. ESP32 Sensing Layer
 
-The ESP32 collects real-world environmental data from:
+The ESP32 collects real-world environmental and physical-state data from:
 
 - BME280 temperature, humidity, and pressure sensor
 - BH1750 ambient light sensor
+- VL53L0X time-of-flight distance sensor
+- magnetic reed switch used as a door/window contact sensor
 
-The sensors communicate with the ESP32 over I2C.
+The BME280, BH1750, and VL53L0X communicate with the ESP32 over I2C. The reed switch is connected as a digital input and is used to represent a simple door/window state.
 
 Default ESP32 I2C pins:
 
@@ -102,7 +106,7 @@ Main MQTT topics:
 |---|---|
 | `iot/model/input` | Input data sent to the model layer |
 | `iot/model/predictions` | Model prediction output |
-| `iot/test/sensors` | Sensor data stream |
+| `iot/test/sensors` | Sensor data stream including environmental values, magnet state, distance, and alarm state |
 | `iot/cmd/act` | Control or actuator command topic |
 
 MQTT examples are documented in:

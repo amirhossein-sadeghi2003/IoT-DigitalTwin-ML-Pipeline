@@ -4,6 +4,7 @@
 - ESP32 DevKit
 - **BME280** (temperature / humidity / pressure) — I2C
 - **BH1750** (light sensor) — I2C
+- **VL53L0X** time-of-flight distance sensor — I2C
 - Magnetic reed switch (door/window)
 - (Optional) LED indicator
 - (Optional) Buzzer
@@ -29,6 +30,11 @@ The code uses `Wire.begin()` (default ESP32 I2C pins).
 ### BH1750
 - Runs in `CONTINUOUS_HIGH_RES_MODE`
 - Pins: VCC, GND, SDA, SCL
+
+### VL53L0X
+- Used as a time-of-flight distance sensor
+- Pins: VCC, GND, SDA, SCL
+- In the firmware, invalid distance readings are published as `null`
 
 ## Wiring notes
 - Keep **all grounds common (GND)**.
