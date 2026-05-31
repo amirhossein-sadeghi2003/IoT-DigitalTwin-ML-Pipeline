@@ -1,46 +1,29 @@
 # IoT Digital Twin ML Pipeline
 
-IoT-based digital twin pipeline combining ESP32 sensing, MQTT communication, machine learning inference, and a Node-RED dashboard for monitoring and decision support.
+I built this project as an end-to-end local IoT pipeline: an ESP32 reads physical sensors, sends data over MQTT, the software layer handles model-side decisions, and Node-RED shows the system state on a dashboard.
 
-This project demonstrates an end-to-end prototype that connects:
+The useful part of this project is that it connects several pieces that are often shown separately. The hardware, MQTT topics, ML artifacts, and dashboard are all part of the same prototype, so it is closer to a small cyber-physical system than a standalone ML notebook.
 
-- embedded sensing
-- IoT communication
-- MQTT messaging
-- machine learning inference
-- dashboard-based visualization
-- digital twin style monitoring
+Current pipeline:
 
-The full system pipeline is:
+- ESP32 sensor node
+- BME280, BH1750, VL53L0X, and reed-switch inputs
+- MQTT message passing
+- ML / decision layer
+- Node-RED dashboard
+- local configuration kept out of Git
 
-```text
-ESP32 sensors → MQTT broker → ML inference layer → Node-RED dashboard
-```
+One practical issue I had to handle was separating public project files from local network settings. The repository includes configuration templates, while real WiFi credentials and local broker details stay untracked.
 
 ---
 
-## Project Overview
+## What I built
 
-The system is built around an ESP32-based sensing unit that collects environmental data from physical sensors and sends the readings through MQTT.
+The system is built around an ESP32-based sensing unit that collects environmental data and simple physical-state inputs, then publishes the readings through MQTT.
 
-The received data can then be processed by machine learning models, and the resulting predictions are visualized in a Node-RED dashboard.
+The software side receives those readings, connects them with model-side decision logic, and visualizes the result in a Node-RED dashboard.
 
-This project is designed as a practical IoT / embedded AI pipeline for environmental monitoring and decision support.
-
----
-
-## Why This Project Matters
-
-This project connects several important parts of an intelligent cyber-physical system:
-
-- sensor data collection from real hardware
-- communication between embedded devices and software services
-- MQTT-based message passing
-- model-based prediction
-- dashboard visualization
-- digital twin style monitoring
-
-It complements my other projects in TinyML, dynamic systems, Kalman filtering, and sensor-based classification by showing a broader IoT system architecture.
+This is still a prototype, but the main value is the integration path: sensor data does not stay inside a script; it moves through an embedded and networked pipeline.
 
 ---
 
@@ -307,34 +290,21 @@ This keeps private WiFi credentials and local broker IP addresses out of the pub
 
 ---
 
-## Project Role in Portfolio
+## What is real in the current prototype
 
-This project represents the IoT and digital twin side of my portfolio.
+The current repository includes the real ESP32 firmware, MQTT topic structure, Node-RED dashboard flow, model artifacts, and project documentation.
 
-It complements other projects focused on:
+The system is local-first. It is meant for local testing with an MQTT broker and Node-RED dashboard, not cloud deployment.
 
-- embedded TinyML condition monitoring
-- Kalman filtering for dynamic systems
-- machine learning classification of simulated physical systems
-- graph mining and node classification
+A few parts are still prototype-level:
 
-Together, these projects support a broader direction:
+- model serving is not packaged as a production service
+- logging and evaluation can be improved
+- dashboard control features are basic
+- cloud deployment is not included
+- actuator feedback is still limited
 
-```text
-AI / ML for intelligent physical and sensor-based systems
-```
-
----
-
-## Project Goal
-
-The main goal of this project is to create an intelligent digital twin pipeline for environmental monitoring and decision support by combining:
-
-- embedded systems
-- IoT communication
-- machine learning
-- MQTT-based data exchange
-- dashboard-based visualization
+That separation matters because the project is strongest as a system-integration prototype, not as a finished industrial digital twin.
 
 ---
 
@@ -369,6 +339,6 @@ Possible next steps:
 
 ## Summary
 
-This project demonstrates a practical IoT digital twin pipeline that connects real embedded sensing with MQTT communication, machine learning inference, and dashboard visualization.
+This repository shows a practical local IoT pipeline that connects real embedded sensing with MQTT communication, model-side decisions, and dashboard visualization.
 
-It is a portfolio-oriented example of how embedded devices, ML systems, and monitoring dashboards can work together in an intelligent cyber-physical system.
+The main lesson from this project is integration: embedded sensing, messaging, model logic, and dashboard feedback have to agree on data format and system state.
