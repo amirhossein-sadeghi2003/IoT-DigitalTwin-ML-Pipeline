@@ -49,7 +49,7 @@ In the current prototype, the sensing layer includes both environmental measurem
 
 ### 1. ESP32 Sensing Layer
 
-The ESP32 collects real-world environmental and physical-state data from:
+The ESP32 collects environmental and physical-state readings from:
 
 - BME280 temperature, humidity, and pressure sensor
 - BH1750 ambient light sensor
@@ -108,7 +108,7 @@ The machine learning pipeline is located in:
 ml_pipeline/
 ```
 
-The project includes trained model artifacts and pipeline documentation for intelligent prediction behavior.
+The repository includes trained model artifacts and notes for how the ML layer is used inside the local IoT pipeline.
 
 The ML layer supports model-based decision making using approaches such as:
 
@@ -154,7 +154,7 @@ The dashboard visualizes the IoT data stream and model outputs.
 
 ### Hardware and Circuit
 
-The hardware setup connects the ESP32 with environmental sensors for real-world data collection.
+The hardware setup connects the ESP32 with environmental sensors used by the local pipeline.
 
 ![Hardware Circuit](docs/images/circuit.jpeg)
 
@@ -314,7 +314,7 @@ This project is a prototype and has several limitations:
 
 - the system is designed for local network testing
 - deployment structure can be improved
-- model serving can be made more robust
+- model serving can be made more reliable
 - logging and evaluation can be expanded
 - dashboard control features are still basic
 - cloud deployment is not included in the current version
@@ -328,7 +328,7 @@ These limitations leave clear room for future extensions.
 Possible next steps:
 
 - improve deployment structure
-- add more robust model serving
+- add more reliable model serving
 - improve model evaluation and logging
 - extend the dashboard with richer control features
 - connect the system to cloud infrastructure
