@@ -1,0 +1,26 @@
+Offline decision replay summary
+===============================
+
+Input file: /home/amir/projects/IoT-DigitalTwin-ML-Pipeline/ml_pipeline/data/sample_telemetry.csv
+Output file: /home/amir/projects/IoT-DigitalTwin-ML-Pipeline/ml_pipeline/results/decision_replay_predictions.csv
+
+Telemetry rows replayed: 8
+Rows with missing distance: 1
+Alarm rows: 1
+Alarm all-off rate: 1.000
+
+Predicted active output counts:
+- heater: 1
+- cooler: 2
+- flood: 2
+- window: 2
+
+Scenario outputs:
+- normal_room: none
+- low_temperature: heater
+- high_temperature: cooler
+- low_light: flood
+- open_window: window
+- multiple_conditions: cooler, flood, window
+- missing_distance: none
+- alarm_override: none
