@@ -102,27 +102,30 @@ docs/mqtt_examples.md
 
 ### 3. Machine Learning Layer
 
-The machine learning pipeline is located in:
+The machine learning and decision pipeline is located in:
 
-```text
-ml_pipeline/
-```
+`ml_pipeline/`
 
-The repository includes trained model artifacts and notes for how the ML layer is used inside the local IoT pipeline.
+The repository includes trained model artifacts and local decision-layer scripts. The full MQTT pipeline can be used with the ESP32 and Node-RED setup, but the decision behavior can also be checked offline from sample telemetry.
 
-The ML layer supports model-based decision making using approaches such as:
+The ML / decision layer currently includes:
 
-- decision tree models
-- neural network models
-- preprocessing / scaling pipeline
+- decision tree model files
+- neural network model files
+- preprocessing / scaling artifacts
+- offline decision replay from sample telemetry
+- generated replay predictions and summary output
 
-Important files include:
+Useful files:
 
-```text
-ml_pipeline/README.md
-ml_pipeline/requirements.txt
-ml_pipeline/models/
-```
+- `ml_pipeline/README.md`
+- `ml_pipeline/requirements.txt`
+- `ml_pipeline/data/sample_telemetry.csv`
+- `ml_pipeline/scripts/replay_decision_logic.py`
+- `ml_pipeline/results/decision_replay_predictions.csv`
+- `ml_pipeline/results/decision_replay_summary.txt`
+
+The offline replay is useful because it does not require the ESP32 circuit, MQTT broker, or Node-RED dashboard. It gives a small reproducible check of the software-side decision behavior directly from the repository.
 
 ---
 
