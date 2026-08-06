@@ -4,8 +4,8 @@
 #define WIFI_SSID "YOUR_WIFI_SSID"
 #define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
 
-// MQTT (public broker for now)
-#define MQTT_SERVER "broker.hivemq.com"
+// MQTT broker reachable from the ESP32
+#define MQTT_SERVER "YOUR_MQTT_BROKER_HOST"
 #define MQTT_PORT 1883
 
 // Topics

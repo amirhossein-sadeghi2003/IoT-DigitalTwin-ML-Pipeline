@@ -862,7 +862,7 @@
         "id": "mqtt_broker",
         "type": "mqtt-broker",
         "name": "my_laptop",
-        "broker": " localhost",
+        "broker": "localhost",
         "port": "1883",
         "clientid": "",
         "autoConnect": true,

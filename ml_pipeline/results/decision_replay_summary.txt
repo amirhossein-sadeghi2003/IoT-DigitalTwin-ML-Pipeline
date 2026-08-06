@@ -1,8 +1,8 @@
 Offline decision replay summary
 ===============================
 
-Input file: /home/amir/projects/IoT-DigitalTwin-ML-Pipeline/ml_pipeline/data/sample_telemetry.csv
-Output file: /home/amir/projects/IoT-DigitalTwin-ML-Pipeline/ml_pipeline/results/decision_replay_predictions.csv
+Input file: ml_pipeline/data/sample_telemetry.csv
+Output file: ml_pipeline/results/decision_replay_predictions.csv
 
 Telemetry rows replayed: 8
 Rows with missing distance: 1

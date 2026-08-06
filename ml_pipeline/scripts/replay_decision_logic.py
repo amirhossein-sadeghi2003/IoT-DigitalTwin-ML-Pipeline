@@ -108,8 +108,8 @@ def main():
         "Offline decision replay summary",
         "===============================",
         "",
-        f"Input file: {INPUT_PATH}",
-        f"Output file: {OUTPUT_CSV}",
+        f"Input file: {INPUT_PATH.relative_to(PIPELINE_DIR.parent)}",
+        f"Output file: {OUTPUT_CSV.relative_to(PIPELINE_DIR.parent)}",
         "",
         f"Telemetry rows replayed: {len(output_rows)}",
         f"Rows with missing distance: {sum(int(row['distance_missing']) for row in output_rows)}",
@@ -134,8 +134,14 @@ def main():
 
     SUMMARY_TXT.write_text("\n".join(lines) + "\n")
 
-    print(f"Saved predictions to: {OUTPUT_CSV}")
-    print(f"Saved summary to: {SUMMARY_TXT}")
+    print(
+        "Saved predictions to: "
+        f"{OUTPUT_CSV.relative_to(PIPELINE_DIR.parent)}"
+    )
+    print(
+        "Saved summary to: "
+        f"{SUMMARY_TXT.relative_to(PIPELINE_DIR.parent)}"
+    )
 
 
 if __name__ == "__main__":

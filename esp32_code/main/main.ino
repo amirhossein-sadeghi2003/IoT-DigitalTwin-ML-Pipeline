@@ -194,13 +194,11 @@ void mqtt_message_handler(char* topic, byte* message, unsigned int length) {
             is_window_open = manual_is_window_open;
         }
         update_actuators(); 
-    } else if (command_received) {
-        if (is_ai_mode && String(topic) == mqtt_topic_control) {
-             
-        } else {
-           
-            update_actuators();
-        }
+    } else if (
+        command_received &&
+        !(is_ai_mode && String(topic) == mqtt_topic_control)
+    ) {
+        update_actuators();
     }
 }
 
