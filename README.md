@@ -2,7 +2,7 @@
 
 I built this project as an end-to-end local IoT pipeline: an ESP32 reads physical sensors, sends data over MQTT, the software layer handles model-side decisions, and Node-RED shows the system state on a dashboard.
 
-The useful part of this project is that it connects several pieces that are often shown separately. The hardware, MQTT topics, ML artifacts, and dashboard are all part of the same prototype, so it is closer to a small cyber-physical system than a standalone ML notebook.
+The useful part of this project is that it connects several pieces that are often shown separately. The hardware, MQTT topics, ML code and outputs, and dashboard are all part of the same prototype, so it is closer to a small cyber-physical system than a standalone ML notebook.
 
 Current pipeline:
 
@@ -77,11 +77,13 @@ esp32_code/main/main.ino
 
 Sensor data is transmitted using MQTT.
 
-Default broker:
+The model services and Node-RED flow use a local MQTT broker on:
 
 ```text
 localhost:1883
 ```
+
+For the ESP32, `MQTT_SERVER` in the local `config.h` must point to a broker host or IP address that is reachable from the device.
 
 Main MQTT topics:
 
@@ -106,13 +108,15 @@ The machine learning and decision pipeline is located in:
 
 `ml_pipeline/`
 
-The repository includes trained model artifacts and local decision-layer scripts. The full MQTT pipeline can be used with the ESP32 and Node-RED setup, but the decision behavior can also be checked offline from sample telemetry.
+The repository includes model training and MQTT serving scripts, along with an offline decision replay based on sample telemetry. Generated model and scaler artifacts are kept local and are not tracked in Git.
+
+The full MQTT pipeline can be used with the ESP32 and Node-RED setup, but the decision behavior can also be checked offline from sample telemetry.
 
 The ML / decision layer currently includes:
 
-- decision tree model files
-- neural network model files
-- preprocessing / scaling artifacts
+- decision tree training and MQTT serving scripts
+- neural network training and MQTT serving scripts
+- local model and scaler artifact generation
 - offline decision replay from sample telemetry
 - generated replay predictions and summary output
 
@@ -295,7 +299,7 @@ This keeps private WiFi credentials and local broker IP addresses out of the pub
 
 ## What is real in the current prototype
 
-The current repository includes the real ESP32 firmware, MQTT topic structure, Node-RED dashboard flow, model artifacts, and project documentation.
+The current repository includes the real ESP32 firmware, MQTT topic structure, Node-RED dashboard flow, model training and serving code, offline replay outputs, and project documentation.
 
 The system is local-first. It is meant for local testing with an MQTT broker and Node-RED dashboard, not cloud deployment.
 
