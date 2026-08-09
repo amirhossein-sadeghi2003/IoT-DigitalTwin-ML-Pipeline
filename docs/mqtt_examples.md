@@ -30,4 +30,5 @@ Model servers publish actuator decisions to the prediction topic using messages 
     cooler=1
     flood=0
     window=0
+
 The neural-network service can also publish a JSON message containing prediction probabilities.
