@@ -16,7 +16,7 @@ The decision layer uses these telemetry fields:
 - distance
 - alarm
 
-The replay script also derives distance_missing when the distance field is empty, null, or -1.
+The replay script also derives `distance_missing` when the distance field is empty, null-like, or -1.
 
 ## Current Outputs
 
