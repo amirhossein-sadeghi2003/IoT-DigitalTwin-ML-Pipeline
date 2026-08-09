@@ -186,7 +186,10 @@ IoT-DigitalTwin-ML-Pipeline/
 ├── ml_pipeline/
 │   ├── README.md
 │   ├── requirements.txt
-│   └── models/
+│   ├── data/
+│   ├── models/
+│   ├── results/
+│   └── scripts/
 ├── node_red_dashboard/
 │   ├── flow.json
 │   └── README.md
@@ -252,10 +255,11 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Then run the relevant model or inference scripts described in:
+For an offline check of the decision layer, return to the repository root and run:
 
-```text
-ml_pipeline/README.md
+```bash
+cd ..
+python ml_pipeline/scripts/replay_decision_logic.py
 ```
 
 ---
